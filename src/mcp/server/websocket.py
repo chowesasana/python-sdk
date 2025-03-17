@@ -1,6 +1,6 @@
-from typing import Union
 import logging
 from contextlib import asynccontextmanager
+from typing import Union
 
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream

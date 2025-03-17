@@ -27,7 +27,7 @@ Usage:
    @server.call_tool()
    async def handle_call_tool(
        name: str, arguments: Union[dict, None]
-   ) -> list[types.Union[TextContent, types].Union[ImageContent, types].EmbeddedResource]:
+   ) -> list[Union[types.TextContent, types.ImageContent, types.EmbeddedResource]]:
        # Implementation
 
    @server.list_resource_templates()
@@ -404,9 +404,11 @@ class Server(Generic[LifespanResultT]):
                 ...,
                 Awaitable[
                     Iterable[
-                        types.Union[TextContent, types]
-                        .Union[ImageContent, types]
-                        .EmbeddedResource
+                        Union[
+                            types.TextContent,
+                            types.ImageContent,
+                            types.EmbeddedResource,
+                        ]
                     ]
                 ],
             ],
@@ -456,8 +458,11 @@ class Server(Generic[LifespanResultT]):
         def decorator(
             func: Callable[
                 [
-                    Union[types.PromptReference, types.ResourceReference,
-                    types.CompletionArgument,
+                    Union[
+                        types.PromptReference,
+                        types.ResourceReference,
+                        types.CompletionArgument,
+                    ]
                 ],
                 Awaitable[Union[types.Completion, None]],
             ],
@@ -481,7 +486,7 @@ class Server(Generic[LifespanResultT]):
 
     async def run(
         self,
-        read_stream: MemoryObjectReceiveStream[types.Union[JSONRPCMessage, Exception]],
+        read_stream: MemoryObjectReceiveStream[Union[types.JSONRPCMessage, Exception]],
         write_stream: MemoryObjectSendStream[types.JSONRPCMessage],
         initialization_options: InitializationOptions,
         # When False, exceptions are returned as messages to the client.

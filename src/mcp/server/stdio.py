@@ -48,8 +48,8 @@ async def stdio_server(
     if not stdout:
         stdout = anyio.wrap_file(TextIOWrapper(sys.stdout.buffer, encoding="utf-8"))
 
-    read_stream: MemoryObjectReceiveStream[types.Union[JSONRPCMessage, Exception]]
-    read_stream_writer: MemoryObjectSendStream[types.Union[JSONRPCMessage, Exception]]
+    read_stream: MemoryObjectReceiveStream[Union[types.JSONRPCMessage, Exception]]
+    read_stream_writer: MemoryObjectSendStream[Union[types.JSONRPCMessage, Exception]]
 
     write_stream: MemoryObjectSendStream[types.JSONRPCMessage]
     write_stream_reader: MemoryObjectReceiveStream[types.JSONRPCMessage]

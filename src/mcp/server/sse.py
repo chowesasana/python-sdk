@@ -85,9 +85,9 @@ class SseServerTransport:
             raise ValueError("connect_sse can only handle HTTP requests")
 
         logger.debug("Setting up SSE connection")
-        read_stream: MemoryObjectReceiveStream[types.Union[JSONRPCMessage, Exception]]
+        read_stream: MemoryObjectReceiveStream[Union[types.JSONRPCMessage, Exception]]
         read_stream_writer: MemoryObjectSendStream[
-            types.Union[JSONRPCMessage, Exception]
+            Union[types.JSONRPCMessage, Exception]
         ]
 
         write_stream: MemoryObjectSendStream[types.JSONRPCMessage]

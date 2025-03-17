@@ -1,7 +1,7 @@
 import logging
 from contextlib import AsyncExitStack
 from datetime import timedelta
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar, Union
 
 import anyio
 import anyio.lowlevel
@@ -36,8 +36,6 @@ ReceiveResultT = TypeVar("ReceiveResultT", bound=BaseModel)
 ReceiveNotificationT = TypeVar(
     "ReceiveNotificationT", ClientNotification, ServerNotification
 )
-
-from typing import Union
 
 RequestId = Union[str, int]
 
