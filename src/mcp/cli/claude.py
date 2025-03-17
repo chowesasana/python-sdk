@@ -4,6 +4,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Dict, List, Optional, Union
 
 from mcp.server.fastmcp.utilities.logging import get_logger
 
@@ -12,7 +13,7 @@ logger = get_logger(__name__)
 MCP_PACKAGE = "mcp[cli]"
 
 
-def get_claude_config_path() -> Path | None:
+def get_claude_config_path() -> Optional[Path]:
     """Get the Claude config directory based on platform."""
     if sys.platform == "win32":
         path = Path(Path.home(), "AppData", "Roaming", "Claude")
@@ -34,9 +35,9 @@ def update_claude_config(
     file_spec: str,
     server_name: str,
     *,
-    with_editable: Path | None = None,
-    with_packages: list[str] | None = None,
-    env_vars: dict[str, str] | None = None,
+    with_editable: Union[Path, None] = None,
+    with_packages: Union[List[str], None] = None,
+    env_vars: Union[Dict[str, str], None] = None,
 ) -> bool:
     """Add or update a FastMCP server in Claude's configuration.
 

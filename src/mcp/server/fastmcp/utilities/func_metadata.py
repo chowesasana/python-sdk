@@ -1,10 +1,11 @@
 import inspect
 import json
 from collections.abc import Awaitable, Callable, Sequence
-from typing import (
+from typing import (Dict,
     Annotated,
     Any,
     ForwardRef,
+    Union,
 )
 
 from pydantic import BaseModel, ConfigDict, Field, WithJsonSchema, create_model
@@ -21,12 +22,12 @@ logger = get_logger(__name__)
 class ArgModelBase(BaseModel):
     """A model representing the arguments to a function."""
 
-    def model_dump_one_level(self) -> dict[str, Any]:
+    def model_dump_one_level(self) -> Dict[str, Any]:
         """Return a dict of the model's fields, one level deep.
 
         That is, sub-models etc are not dumped - they are kept as pydantic models.
         """
-        kwargs: dict[str, Any] = {}
+        kwargs: Dict[str, Any] = {}
         for field_name in self.model_fields.keys():
             kwargs[field_name] = getattr(self, field_name)
         return kwargs
@@ -44,10 +45,10 @@ class FuncMetadata(BaseModel):
 
     async def call_fn_with_arg_validation(
         self,
-        fn: Callable[..., Any] | Awaitable[Any],
+        fn: Union[Callable[..., Any], Awaitable[Any]],
         fn_is_async: bool,
-        arguments_to_validate: dict[str, Any],
-        arguments_to_pass_directly: dict[str, Any] | None,
+        arguments_to_validate: Dict[str, Any],
+        arguments_to_pass_directly: Union[Dict[str, Any], None],
     ) -> Any:
         """Call the given function with arguments validated and injected.
 
@@ -68,7 +69,7 @@ class FuncMetadata(BaseModel):
             return fn(**arguments_parsed_dict)
         raise TypeError("fn must be either Callable or Awaitable")
 
-    def pre_parse_json(self, data: dict[str, Any]) -> dict[str, Any]:
+    def pre_parse_json(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Pre-parse data from JSON.
 
         Return a dict with same keys as input but with values parsed from JSON
@@ -127,7 +128,7 @@ def func_metadata(
     """
     sig = _get_typed_signature(func)
     params = sig.parameters
-    dynamic_pydantic_model_params: dict[str, Any] = {}
+    dynamic_pydantic_model_params: Dict[str, Any] = {}
     globalns = getattr(func, "__globals__", {})
     for param in params.values():
         if param.name.startswith("_"):
@@ -176,7 +177,7 @@ def func_metadata(
     return resp
 
 
-def _get_typed_annotation(annotation: Any, globalns: dict[str, Any]) -> Any:
+def _get_typed_annotation(annotation: Any, globalns: Dict[str, Any]) -> Any:
     def try_eval_type(value, globalns, localns):
         try:
             return eval_type_backport(value, globalns, localns), True

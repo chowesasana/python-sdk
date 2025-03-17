@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Dict, List, Tuple, Union
 
 try:
     import typer
@@ -52,7 +52,7 @@ def _get_npx_command():
     return "npx"  # On Unix-like systems, just use npx
 
 
-def _parse_env_var(env_var: str) -> tuple[str, str]:
+def _parse_env_var(env_var: str) -> Tuple[str, str]:
     """Parse environment variable string in format KEY=VALUE."""
     if "=" not in env_var:
         logger.error(
@@ -65,9 +65,9 @@ def _parse_env_var(env_var: str) -> tuple[str, str]:
 
 def _build_uv_command(
     file_spec: str,
-    with_editable: Path | None = None,
-    with_packages: list[str] | None = None,
-) -> list[str]:
+    with_editable: Union[Path, None] = None,
+    with_packages: Union[List[str], None] = None,
+) -> List[str]:
     """Build the uv run command that runs a MCP server through mcp run."""
     cmd = ["uv"]
 
@@ -86,7 +86,7 @@ def _build_uv_command(
     return cmd
 
 
-def _parse_file_path(file_spec: str) -> tuple[Path, str | None]:
+def _parse_file_path(file_spec: str) -> Tuple[Path, Union[str, None]]:
     """Parse a file path that may include a server object specification.
 
     Args:
@@ -117,7 +117,7 @@ def _parse_file_path(file_spec: str) -> tuple[Path, str | None]:
     return file_path, server_object
 
 
-def _import_server(file: Path, server_object: str | None = None):
+def _import_server(file: Path, server_object: Union[str, None] = None):
     """Import a MCP server from a file.
 
     Args:
@@ -200,7 +200,7 @@ def dev(
         help="Python file to run, optionally with :object suffix",
     ),
     with_editable: Annotated[
-        Path | None,
+        Union[Path, None],
         typer.Option(
             "--with-editable",
             "-e",
@@ -211,7 +211,7 @@ def dev(
         ),
     ] = None,
     with_packages: Annotated[
-        list[str],
+        List[str],
         typer.Option(
             "--with",
             help="Additional packages to install",
@@ -284,7 +284,7 @@ def run(
         help="Python file to run, optionally with :object suffix",
     ),
     transport: Annotated[
-        str | None,
+        Union[str, None],
         typer.Option(
             "--transport",
             "-t",
@@ -343,7 +343,7 @@ def install(
         help="Python file to run, optionally with :object suffix",
     ),
     server_name: Annotated[
-        str | None,
+        Union[str, None],
         typer.Option(
             "--name",
             "-n",
@@ -352,7 +352,7 @@ def install(
         ),
     ] = None,
     with_editable: Annotated[
-        Path | None,
+        Union[Path, None],
         typer.Option(
             "--with-editable",
             "-e",
@@ -363,14 +363,14 @@ def install(
         ),
     ] = None,
     with_packages: Annotated[
-        list[str],
+        List[str],
         typer.Option(
             "--with",
             help="Additional packages to install",
         ),
     ] = [],
     env_vars: Annotated[
-        list[str],
+        List[str],
         typer.Option(
             "--env-var",
             "-v",
@@ -378,7 +378,7 @@ def install(
         ),
     ] = [],
     env_file: Annotated[
-        Path | None,
+        Union[Path, None],
         typer.Option(
             "--env-file",
             "-f",
@@ -434,7 +434,7 @@ def install(
         with_packages = list(set(with_packages + server_dependencies))
 
     # Process environment variables if provided
-    env_dict: dict[str, str] | None = None
+    env_dict: Union[Dict[str, str], None] = None
     if env_file or env_vars:
         env_dict = {}
         # Load from .env file if specified
@@ -456,7 +456,7 @@ def install(
         # Add command line environment variables
         for env_var in env_vars:
             key, value = _parse_env_var(env_var)
-            env_dict[key] = value
+            env_Dict[key] = value
 
     if claude.update_claude_config(
         file_spec,

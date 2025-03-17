@@ -10,7 +10,7 @@ Common usage pattern:
     server = Server(name)
 
     @server.call_tool()
-    async def handle_tool_call(ctx: RequestContext, arguments: dict[str, Any]) -> Any:
+    async def handle_tool_call(ctx: RequestContext, arguments: Dict[str, Any]) -> Any:
         # Check client capabilities before proceeding
         if ctx.session.check_client_capability(
             types.ClientCapabilities(experimental={"advanced_tools": dict()})
@@ -24,7 +24,7 @@ Common usage pattern:
         return result
 
     @server.list_prompts()
-    async def handle_list_prompts(ctx: RequestContext) -> list[types.Prompt]:
+    async def handle_list_prompts(ctx: RequestContext) -> List[types.Prompt]:
         # Access session for any necessary checks or operations
         if ctx.session.client_params:
             # Customize prompts based on client initialization parameters
@@ -38,7 +38,7 @@ be instantiated directly by users of the MCP framework.
 """
 
 from enum import Enum
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Union, Dict, List
 
 import anyio
 import anyio.lowlevel
@@ -72,11 +72,11 @@ class ServerSession(
     ]
 ):
     _initialized: InitializationState = InitializationState.NotInitialized
-    _client_params: types.InitializeRequestParams | None = None
+    _client_params: Union[types.InitializeRequestParams, None] = None
 
     def __init__(
         self,
-        read_stream: MemoryObjectReceiveStream[types.JSONRPCMessage | Exception],
+        read_stream: MemoryObjectReceiveStream[Union[types.JSONRPCMessage, Exception]],
         write_stream: MemoryObjectSendStream[types.JSONRPCMessage],
         init_options: InitializationOptions,
     ) -> None:
@@ -87,7 +87,7 @@ class ServerSession(
         self._init_options = init_options
 
     @property
-    def client_params(self) -> types.InitializeRequestParams | None:
+    def client_params(self) -> Union[types.InitializeRequestParams, None]:
         return self._client_params
 
     def check_client_capability(self, capability: types.ClientCapabilities) -> bool:
@@ -125,13 +125,14 @@ class ServerSession(
     async def _received_request(
         self, responder: RequestResponder[types.ClientRequest, types.ServerResult]
     ):
-        match responder.request.root:
-            case types.InitializeRequest(params=params):
-                self._initialization_state = InitializationState.Initializing
-                self._client_params = params
-                with responder:
-                    await responder.respond(
-                        types.ServerResult(
+        req = responder.request.root
+        if isinstance(req, types.InitializeRequest):
+            params = req.params
+            self._initialization_state = InitializationState.Initializing
+            self._client_params = params
+            with responder:
+                await responder.respond(
+                    types.ServerResult(
                             types.InitializeResult(
                                 protocolVersion=types.LATEST_PROTOCOL_VERSION,
                                 capabilities=self._init_options.capabilities,
@@ -143,28 +144,27 @@ class ServerSession(
                             )
                         )
                     )
-            case _:
-                if self._initialization_state != InitializationState.Initialized:
-                    raise RuntimeError(
-                        "Received request before initialization was complete"
-                    )
+        else:
+            if self._initialization_state != InitializationState.Initialized:
+                raise RuntimeError(
+                    "Received request before initialization was complete"
+                )
 
     async def _received_notification(
         self, notification: types.ClientNotification
     ) -> None:
         # Need this to avoid ASYNC910
         await anyio.lowlevel.checkpoint()
-        match notification.root:
-            case types.InitializedNotification():
-                self._initialization_state = InitializationState.Initialized
-            case _:
-                if self._initialization_state != InitializationState.Initialized:
-                    raise RuntimeError(
-                        "Received notification before initialization was complete"
-                    )
+        if isinstance(notification.root, types.InitializedNotification):
+            self._initialization_state = InitializationState.Initialized
+        else:
+            if self._initialization_state != InitializationState.Initialized:
+                raise RuntimeError(
+                    "Received notification before initialization was complete"
+                )
 
     async def send_log_message(
-        self, level: types.LoggingLevel, data: Any, logger: str | None = None
+        self, level: types.LoggingLevel, data: Any, logger: Union[str, None] = None
     ) -> None:
         """Send a log message notification."""
         await self.send_notification(
@@ -193,15 +193,15 @@ class ServerSession(
 
     async def create_message(
         self,
-        messages: list[types.SamplingMessage],
+        messages: List[types.SamplingMessage],
         *,
         max_tokens: int,
-        system_prompt: str | None = None,
-        include_context: types.IncludeContext | None = None,
-        temperature: float | None = None,
-        stop_sequences: list[str] | None = None,
-        metadata: dict[str, Any] | None = None,
-        model_preferences: types.ModelPreferences | None = None,
+        system_prompt: Union[str, None] = None,
+        include_context: Union[types.IncludeContext, None] = None,
+        temperature: Union[float, None] = None,
+        stop_sequences: Union[List[str], None] = None,
+        metadata: Union[Dict[str, Any], None] = None,
+        model_preferences: Union[types.ModelPreferences, None] = None,
     ) -> types.CreateMessageResult:
         """Send a sampling/create_message request."""
         return await self.send_request(
@@ -246,7 +246,7 @@ class ServerSession(
         )
 
     async def send_progress_notification(
-        self, progress_token: str | int, progress: float, total: float | None = None
+        self, progress_token: Union[str, int], progress: float, total: Union[float, None] = None
     ) -> None:
         """Send a progress notification."""
         await self.send_notification(

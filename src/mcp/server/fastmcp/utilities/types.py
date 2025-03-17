@@ -2,6 +2,7 @@
 
 import base64
 from pathlib import Path
+from typing import Union
 
 from mcp.types import ImageContent
 
@@ -11,9 +12,9 @@ class Image:
 
     def __init__(
         self,
-        path: str | Path | None = None,
-        data: bytes | None = None,
-        format: str | None = None,
+        path: Union[str, Path, None] = None,
+        data: Union[bytes, None] = None,
+        format: Union[str, None] = None,
     ):
         if path is None and data is None:
             raise ValueError("Either path or data must be provided")

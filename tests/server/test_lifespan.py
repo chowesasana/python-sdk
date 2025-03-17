@@ -1,7 +1,7 @@
 """Tests for lifespan functionality in both low-level and FastMCP servers."""
 
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import AsyncIterator, Dict
 
 import anyio
 import pytest
@@ -25,7 +25,7 @@ async def test_lowlevel_server_lifespan():
     """Test that lifespan works in low-level server."""
 
     @asynccontextmanager
-    async def test_lifespan(server: Server) -> AsyncIterator[dict[str, bool]]:
+    async def test_lifespan(server: Server) -> AsyncIterator[Dict[str, bool]]:
         """Test lifespan context that tracks startup/shutdown."""
         context = {"started": False, "shutdown": False}
         try:

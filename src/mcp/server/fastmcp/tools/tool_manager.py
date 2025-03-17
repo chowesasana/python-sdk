@@ -1,7 +1,7 @@
 from __future__ import annotations as _annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Union, Dict, List
 
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.server.fastmcp.tools.base import Tool
@@ -19,22 +19,22 @@ class ToolManager:
     """Manages FastMCP tools."""
 
     def __init__(self, warn_on_duplicate_tools: bool = True):
-        self._tools: dict[str, Tool] = {}
+        self._tools: Dict[str, Tool] = {}
         self.warn_on_duplicate_tools = warn_on_duplicate_tools
 
-    def get_tool(self, name: str) -> Tool | None:
+    def get_tool(self, name: str) -> Union[Tool, None]:
         """Get tool by name."""
         return self._tools.get(name)
 
-    def list_tools(self) -> list[Tool]:
+    def list_tools(self) -> List[Tool]:
         """List all registered tools."""
         return list(self._tools.values())
 
     def add_tool(
         self,
         fn: Callable,
-        name: str | None = None,
-        description: str | None = None,
+        name: Union[str, None] = None,
+        description: Union[str, None] = None,
     ) -> Tool:
         """Add a tool to the server."""
         tool = Tool.from_function(fn, name=name, description=description)
@@ -49,8 +49,8 @@ class ToolManager:
     async def call_tool(
         self,
         name: str,
-        arguments: dict[str, Any],
-        context: Context[ServerSessionT, LifespanContextT] | None = None,
+        arguments: Dict[str, Any],
+        context: Union[Context[ServerSessionT, LifespanContextT], None] = None,
     ) -> Any:
         """Call a tool by name with arguments."""
         tool = self.get_tool(name)

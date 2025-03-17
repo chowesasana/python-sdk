@@ -4,6 +4,7 @@ and tools.
 """
 
 from pydantic import BaseModel
+from typing import Union
 
 from mcp.types import (
     ServerCapabilities,
@@ -14,4 +15,4 @@ class InitializationOptions(BaseModel):
     server_name: str
     server_version: str
     capabilities: ServerCapabilities
-    instructions: str | None = None
+    instructions: Union[str, None] = None

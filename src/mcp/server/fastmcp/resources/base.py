@@ -1,7 +1,7 @@
 """Base classes and interfaces for FastMCP resources."""
 
 import abc
-from typing import Annotated
+from typing import Annotated, Union
 
 from pydantic import (
     AnyUrl,
@@ -22,8 +22,8 @@ class Resource(BaseModel, abc.ABC):
     uri: Annotated[AnyUrl, UrlConstraints(host_required=False)] = Field(
         default=..., description="URI of the resource"
     )
-    name: str | None = Field(description="Name of the resource", default=None)
-    description: str | None = Field(
+    name: Union[str, None] = Field(description="Name of the resource", default=None)
+    description: Union[str, None] = Field(
         description="Description of the resource", default=None
     )
     mime_type: str = Field(
@@ -34,7 +34,7 @@ class Resource(BaseModel, abc.ABC):
 
     @field_validator("name", mode="before")
     @classmethod
-    def set_default_name(cls, name: str | None, info: ValidationInfo) -> str:
+    def set_default_name(cls, name: Union[str, None], info: ValidationInfo) -> str:
         """Set default name from URI if not provided."""
         if name:
             return name
@@ -43,6 +43,6 @@ class Resource(BaseModel, abc.ABC):
         raise ValueError("Either name or uri must be provided")
 
     @abc.abstractmethod
-    async def read(self) -> str | bytes:
+    async def read(self) -> Union[str, bytes]:
         """Read the resource content."""
         pass

@@ -1,5 +1,7 @@
 """Prompt management functionality."""
 
+from typing import Union, Dict, List
+
 from mcp.server.fastmcp.prompts.base import Prompt
 from mcp.server.fastmcp.utilities.logging import get_logger
 
@@ -10,7 +12,7 @@ class PromptManager:
     """Manages FastMCP prompts."""
 
     def __init__(self, warn_on_duplicate_prompts: bool = True):
-        self._prompts: dict[str, Prompt] = {}
+        self._prompts: Dict[str, Prompt] = {}
         self.warn_on_duplicate_prompts = warn_on_duplicate_prompts
 
     def add_prompt(self, prompt: Prompt) -> Prompt:
@@ -24,10 +26,10 @@ class PromptManager:
         self._prompts[prompt.name] = prompt
         return prompt
 
-    def get_prompt(self, name: str) -> Prompt | None:
+    def get_prompt(self, name: str) -> Union[Prompt, None]:
         """Get prompt by name."""
         return self._prompts.get(name)
 
-    def list_prompts(self) -> list[Prompt]:
+    def list_prompts(self) -> List[Prompt]:
         """List all registered prompts."""
         return list(self._prompts.values())

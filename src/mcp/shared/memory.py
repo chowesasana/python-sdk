@@ -4,7 +4,7 @@ In-memory transports
 
 from contextlib import asynccontextmanager
 from datetime import timedelta
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Tuple, Union
 
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
@@ -13,15 +13,15 @@ from mcp.client.session import ClientSession, ListRootsFnT, SamplingFnT
 from mcp.server import Server
 from mcp.types import JSONRPCMessage
 
-MessageStream = tuple[
-    MemoryObjectReceiveStream[JSONRPCMessage | Exception],
+MessageStream = Tuple[
+    MemoryObjectReceiveStream[Union[JSONRPCMessage, Exception]],
     MemoryObjectSendStream[JSONRPCMessage],
 ]
 
 
 @asynccontextmanager
 async def create_client_server_memory_streams() -> (
-    AsyncGenerator[tuple[MessageStream, MessageStream], None]
+    AsyncGenerator[Tuple[MessageStream, MessageStream], None]
 ):
     """
     Creates a pair of bidirectional memory streams for client-server communication.
@@ -32,10 +32,10 @@ async def create_client_server_memory_streams() -> (
     """
     # Create streams for both directions
     server_to_client_send, server_to_client_receive = anyio.create_memory_object_stream[
-        JSONRPCMessage | Exception
+        Union[JSONRPCMessage, Exception]
     ](1)
     client_to_server_send, client_to_server_receive = anyio.create_memory_object_stream[
-        JSONRPCMessage | Exception
+        Union[JSONRPCMessage, Exception]
     ](1)
 
     client_streams = (server_to_client_receive, client_to_server_send)
@@ -53,9 +53,9 @@ async def create_client_server_memory_streams() -> (
 @asynccontextmanager
 async def create_connected_server_and_client_session(
     server: Server,
-    read_timeout_seconds: timedelta | None = None,
-    sampling_callback: SamplingFnT | None = None,
-    list_roots_callback: ListRootsFnT | None = None,
+    read_timeout_seconds: Union[timedelta, None] = None,
+    sampling_callback: Union[SamplingFnT, None] = None,
+    list_roots_callback: Union[ListRootsFnT, None] = None,
     raise_exceptions: bool = False,
 ) -> AsyncGenerator[ClientSession, None]:
     """Creates a ClientSession that is connected to a running MCP server."""

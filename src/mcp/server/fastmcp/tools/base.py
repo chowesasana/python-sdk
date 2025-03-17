@@ -1,7 +1,7 @@
 from __future__ import annotations as _annotations
 
 import inspect
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Dict, Union
 
 from pydantic import BaseModel, Field
 
@@ -21,13 +21,13 @@ class Tool(BaseModel):
     fn: Callable[..., Any] = Field(exclude=True)
     name: str = Field(description="Name of the tool")
     description: str = Field(description="Description of what the tool does")
-    parameters: dict[str, Any] = Field(description="JSON schema for tool parameters")
+    parameters: Dict[str, Any] = Field(description="JSON schema for tool parameters")
     fn_metadata: FuncMetadata = Field(
         description="Metadata about the function including a pydantic model for tool"
         " arguments"
     )
     is_async: bool = Field(description="Whether the tool is async")
-    context_kwarg: str | None = Field(
+    context_kwarg: Union[str, None] = Field(
         None, description="Name of the kwarg that should receive context"
     )
 
@@ -35,9 +35,9 @@ class Tool(BaseModel):
     def from_function(
         cls,
         fn: Callable[..., Any],
-        name: str | None = None,
-        description: str | None = None,
-        context_kwarg: str | None = None,
+        name: Union[str, None] = None,
+        description: Union[str, None] = None,
+        context_kwarg: Union[str, None] = None,
     ) -> "Tool":
         """Create a Tool from a function."""
         func_name = name or fn.__name__
@@ -74,8 +74,8 @@ class Tool(BaseModel):
 
     async def run(
         self,
-        arguments: dict[str, Any],
-        context: Context[ServerSessionT, LifespanContextT] | None = None,
+        arguments: Dict[str, Any],
+        context: Union[Context[ServerSessionT, LifespanContextT], None] = None,
     ) -> Any:
         """Run the tool with arguments."""
         try:

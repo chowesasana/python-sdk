@@ -11,7 +11,7 @@ from contextlib import (
     asynccontextmanager,
 )
 from itertools import chain
-from typing import Any, Callable, Generic, Literal, Sequence
+from typing import Any, Callable, Generic, Literal, Sequence, Union, Dict, List
 
 import anyio
 import pydantic_core
@@ -80,13 +80,13 @@ class Settings(BaseSettings, Generic[LifespanResultT]):
     # prompt settings
     warn_on_duplicate_prompts: bool = True
 
-    dependencies: list[str] = Field(
+    dependencies: List[str] = Field(
         default_factory=list,
         description="List of dependencies to install in the server environment",
     )
 
     lifespan: (
-        Callable[["FastMCP"], AbstractAsyncContextManager[LifespanResultT]] | None
+        Union[Callable[["FastMCP"], AbstractAsyncContextManager[LifespanResultT]], None]
     ) = Field(None, description="Lifespan context manager")
 
 
@@ -104,7 +104,7 @@ def lifespan_wrapper(
 
 class FastMCP:
     def __init__(
-        self, name: str | None = None, instructions: str | None = None, **settings: Any
+        self, name: Union[str, None] = None, instructions: Union[str, None] = None, **settings: Any
     ):
         self.settings = Settings(**settings)
 
@@ -137,7 +137,7 @@ class FastMCP:
         return self._mcp_server.name
 
     @property
-    def instructions(self) -> str | None:
+    def instructions(self) -> Union[str, None]:
         return self._mcp_server.instructions
 
     def run(self, transport: Literal["stdio", "sse"] = "stdio") -> None:
@@ -165,7 +165,7 @@ class FastMCP:
         self._mcp_server.get_prompt()(self.get_prompt)
         self._mcp_server.list_resource_templates()(self.list_resource_templates)
 
-    async def list_tools(self) -> list[MCPTool]:
+    async def list_tools(self) -> List[MCPTool]:
         """List all available tools."""
         tools = self._tool_manager.list_tools()
         return [
@@ -189,15 +189,15 @@ class FastMCP:
         return Context(request_context=request_context, fastmcp=self)
 
     async def call_tool(
-        self, name: str, arguments: dict[str, Any]
-    ) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
+        self, name: str, arguments: Dict[str, Any]
+    ) -> Sequence[Union[TextContent, ImageContent] | EmbeddedResource]:
         """Call a tool by name with arguments."""
         context = self.get_context()
         result = await self._tool_manager.call_tool(name, arguments, context=context)
         converted_result = _convert_to_content(result)
         return converted_result
 
-    async def list_resources(self) -> list[MCPResource]:
+    async def list_resources(self) -> List[MCPResource]:
         """List all available resources."""
 
         resources = self._resource_manager.list_resources()
@@ -211,7 +211,7 @@ class FastMCP:
             for resource in resources
         ]
 
-    async def list_resource_templates(self) -> list[MCPResourceTemplate]:
+    async def list_resource_templates(self) -> List[MCPResourceTemplate]:
         templates = self._resource_manager.list_templates()
         return [
             MCPResourceTemplate(
@@ -222,7 +222,7 @@ class FastMCP:
             for template in templates
         ]
 
-    async def read_resource(self, uri: AnyUrl | str) -> Iterable[ReadResourceContents]:
+    async def read_resource(self, uri: Union[AnyUrl, str]) -> Iterable[ReadResourceContents]:
         """Read a resource by URI."""
 
         resource = await self._resource_manager.get_resource(uri)
@@ -239,8 +239,8 @@ class FastMCP:
     def add_tool(
         self,
         fn: AnyFunction,
-        name: str | None = None,
-        description: str | None = None,
+        name: Union[str, None] = None,
+        description: Union[str, None] = None,
     ) -> None:
         """Add a tool to the server.
 
@@ -255,7 +255,7 @@ class FastMCP:
         self._tool_manager.add_tool(fn, name=name, description=description)
 
     def tool(
-        self, name: str | None = None, description: str | None = None
+        self, name: Union[str, None] = None, description: Union[str, None] = None
     ) -> Callable[[AnyFunction], AnyFunction]:
         """Decorator to register a tool.
 
@@ -307,9 +307,9 @@ class FastMCP:
         self,
         uri: str,
         *,
-        name: str | None = None,
-        description: str | None = None,
-        mime_type: str | None = None,
+        name: Union[str, None] = None,
+        description: Union[str, None] = None,
+        mime_type: Union[str, None] = None,
     ) -> Callable[[AnyFunction], AnyFunction]:
         """Decorator to register a function as a resource.
 
@@ -401,7 +401,7 @@ class FastMCP:
         self._prompt_manager.add_prompt(prompt)
 
     def prompt(
-        self, name: str | None = None, description: str | None = None
+        self, name: Union[str, None] = None, description: Union[str, None] = None
     ) -> Callable[[AnyFunction], AnyFunction]:
         """Decorator to register a prompt.
 
@@ -411,7 +411,7 @@ class FastMCP:
 
         Example:
             @server.prompt()
-            def analyze_table(table_name: str) -> list[Message]:
+            def analyze_table(table_name: str) -> List[Message]:
                 schema = read_table_schema(table_name)
                 return [
                     {
@@ -421,7 +421,7 @@ class FastMCP:
                 ]
 
             @server.prompt()
-            async def analyze_file(path: str) -> list[Message]:
+            async def analyze_file(path: str) -> List[Message]:
                 content = await read_file(path)
                 return [
                     {
@@ -493,7 +493,7 @@ class FastMCP:
         server = uvicorn.Server(config)
         await server.serve()
 
-    async def list_prompts(self) -> list[MCPPrompt]:
+    async def list_prompts(self) -> List[MCPPrompt]:
         """List all available prompts."""
         prompts = self._prompt_manager.list_prompts()
         return [
@@ -513,7 +513,7 @@ class FastMCP:
         ]
 
     async def get_prompt(
-        self, name: str, arguments: dict[str, Any] | None = None
+        self, name: str, arguments: Union[Dict[str, Any], None] = None
     ) -> GetPromptResult:
         """Get a prompt by name with arguments."""
         try:
@@ -527,7 +527,7 @@ class FastMCP:
 
 def _convert_to_content(
     result: Any,
-) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
+) -> Sequence[Union[TextContent, ImageContent] | EmbeddedResource]:
     """Convert a result to a sequence of content objects."""
     if result is None:
         return []
@@ -584,14 +584,14 @@ class Context(BaseModel, Generic[ServerSessionT, LifespanContextT]):
     The context is optional - tools that don't need it can omit the parameter.
     """
 
-    _request_context: RequestContext[ServerSessionT, LifespanContextT] | None
-    _fastmcp: FastMCP | None
+    _request_context: Union[RequestContext[ServerSessionT, LifespanContextT], None]
+    _fastmcp: Union[FastMCP, None]
 
     def __init__(
         self,
         *,
-        request_context: RequestContext[ServerSessionT, LifespanContextT] | None = None,
-        fastmcp: FastMCP | None = None,
+        request_context: Union[RequestContext[ServerSessionT, LifespanContextT], None] = None,
+        fastmcp: Union[FastMCP, None] = None,
         **kwargs: Any,
     ):
         super().__init__(**kwargs)
@@ -613,7 +613,7 @@ class Context(BaseModel, Generic[ServerSessionT, LifespanContextT]):
         return self._request_context
 
     async def report_progress(
-        self, progress: float, total: float | None = None
+        self, progress: float, total: Union[float, None] = None
     ) -> None:
         """Report progress for the current operation.
 
@@ -635,7 +635,7 @@ class Context(BaseModel, Generic[ServerSessionT, LifespanContextT]):
             progress_token=progress_token, progress=progress, total=total
         )
 
-    async def read_resource(self, uri: str | AnyUrl) -> Iterable[ReadResourceContents]:
+    async def read_resource(self, uri: Union[str, AnyUrl]) -> Iterable[ReadResourceContents]:
         """Read a resource by URI.
 
         Args:
@@ -654,7 +654,7 @@ class Context(BaseModel, Generic[ServerSessionT, LifespanContextT]):
         level: Literal["debug", "info", "warning", "error"],
         message: str,
         *,
-        logger_name: str | None = None,
+        logger_name: Union[str, None] = None,
     ) -> None:
         """Send a log message to the client.
 
@@ -669,7 +669,7 @@ class Context(BaseModel, Generic[ServerSessionT, LifespanContextT]):
         )
 
     @property
-    def client_id(self) -> str | None:
+    def client_id(self) -> Union[str, None]:
         """Get the client ID if available."""
         return (
             getattr(self.request_context.meta, "client_id", None)

@@ -3,14 +3,14 @@
 import inspect
 import json
 from collections.abc import Callable
-from typing import Any, Awaitable, Literal, Sequence
+from typing import Any, Awaitable, Literal, Sequence, Union, Dict, List
 
 import pydantic_core
 from pydantic import BaseModel, Field, TypeAdapter, validate_call
 
 from mcp.types import EmbeddedResource, ImageContent, TextContent
 
-CONTENT_TYPES = TextContent | ImageContent | EmbeddedResource
+CONTENT_TYPES = Union[TextContent, ImageContent, EmbeddedResource]
 
 
 class Message(BaseModel):
@@ -19,7 +19,7 @@ class Message(BaseModel):
     role: Literal["user", "assistant"]
     content: CONTENT_TYPES
 
-    def __init__(self, content: str | CONTENT_TYPES, **kwargs):
+    def __init__(self, content: Union[str, CONTENT_TYPES], **kwargs):
         if isinstance(content, str):
             content = TextContent(type="text", text=content)
         super().__init__(content=content, **kwargs)
@@ -30,7 +30,7 @@ class UserMessage(Message):
 
     role: Literal["user", "assistant"] = "user"
 
-    def __init__(self, content: str | CONTENT_TYPES, **kwargs):
+    def __init__(self, content: Union[str, CONTENT_TYPES], **kwargs):
         super().__init__(content=content, **kwargs)
 
 
@@ -39,23 +39,23 @@ class AssistantMessage(Message):
 
     role: Literal["user", "assistant"] = "assistant"
 
-    def __init__(self, content: str | CONTENT_TYPES, **kwargs):
+    def __init__(self, content: Union[str, CONTENT_TYPES], **kwargs):
         super().__init__(content=content, **kwargs)
 
 
-message_validator = TypeAdapter(UserMessage | AssistantMessage)
+message_validator = TypeAdapter(Union[UserMessage, AssistantMessage])
 
 SyncPromptResult = (
-    str | Message | dict[str, Any] | Sequence[str | Message | dict[str, Any]]
+    Union[str, Message, Dict[str, Any], Sequence[Union[str, Message, Dict[str, Any]]]]
 )
-PromptResult = SyncPromptResult | Awaitable[SyncPromptResult]
+PromptResult = Union[SyncPromptResult, Awaitable[SyncPromptResult]]
 
 
 class PromptArgument(BaseModel):
     """An argument that can be passed to a prompt."""
 
     name: str = Field(description="Name of the argument")
-    description: str | None = Field(
+    description: Union[str, None] = Field(
         None, description="Description of what the argument does"
     )
     required: bool = Field(
@@ -67,10 +67,10 @@ class Prompt(BaseModel):
     """A prompt template that can be rendered with parameters."""
 
     name: str = Field(description="Name of the prompt")
-    description: str | None = Field(
+    description: Union[str, None] = Field(
         None, description="Description of what the prompt does"
     )
-    arguments: list[PromptArgument] | None = Field(
+    arguments: Union[List[PromptArgument], None] = Field(
         None, description="Arguments that can be passed to the prompt"
     )
     fn: Callable = Field(exclude=True)
@@ -79,8 +79,8 @@ class Prompt(BaseModel):
     def from_function(
         cls,
         fn: Callable[..., PromptResult],
-        name: str | None = None,
-        description: str | None = None,
+        name: Union[str, None] = None,
+        description: Union[str, None] = None,
     ) -> "Prompt":
         """Create a Prompt from a function.
 
@@ -121,7 +121,7 @@ class Prompt(BaseModel):
             fn=fn,
         )
 
-    async def render(self, arguments: dict[str, Any] | None = None) -> list[Message]:
+    async def render(self, arguments: Union[Dict[str, Any], None] = None) -> List[Message]:
         """Render the prompt with arguments."""
         # Validate required arguments
         if self.arguments:

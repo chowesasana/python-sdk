@@ -1,6 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, Dict, Optional, Union
 from urllib.parse import urljoin, urlparse
 
 import anyio
@@ -21,7 +21,7 @@ def remove_request_params(url: str) -> str:
 @asynccontextmanager
 async def sse_client(
     url: str,
-    headers: dict[str, Any] | None = None,
+    headers: Optional[Dict[str, Any]] = None,
     timeout: float = 5,
     sse_read_timeout: float = 60 * 5,
 ):
@@ -31,8 +31,8 @@ async def sse_client(
     `sse_read_timeout` determines how long (in seconds) the client will wait for a new
     event before disconnecting. All other HTTP operations are controlled by `timeout`.
     """
-    read_stream: MemoryObjectReceiveStream[types.JSONRPCMessage | Exception]
-    read_stream_writer: MemoryObjectSendStream[types.JSONRPCMessage | Exception]
+    read_stream: MemoryObjectReceiveStream[Union[types.JSONRPCMessage, Exception]]
+    read_stream_writer: MemoryObjectSendStream[Union[types.JSONRPCMessage, Exception]]
 
     write_stream: MemoryObjectSendStream[types.JSONRPCMessage]
     write_stream_reader: MemoryObjectReceiveStream[types.JSONRPCMessage]
@@ -59,49 +59,49 @@ async def sse_client(
                         try:
                             async for sse in event_source.aiter_sse():
                                 logger.debug(f"Received SSE event: {sse.event}")
-                                match sse.event:
-                                    case "endpoint":
-                                        endpoint_url = urljoin(url, sse.data)
-                                        logger.info(
-                                            f"Received endpoint URL: {endpoint_url}"
+                                event_type = sse.event
+                                if event_type == "endpoint":
+                                    endpoint_url = urljoin(url, sse.data)
+                                    logger.info(
+                                        f"Received endpoint URL: {endpoint_url}"
+                                    )
+
+                                    url_parsed = urlparse(url)
+                                    endpoint_parsed = urlparse(endpoint_url)
+                                    if (
+                                        url_parsed.netloc != endpoint_parsed.netloc
+                                        or url_parsed.scheme
+                                        != endpoint_parsed.scheme
+                                    ):
+                                        error_msg = (
+                                            "Endpoint origin does not match "
+                                            f"connection origin: {endpoint_url}"
                                         )
+                                        logger.error(error_msg)
+                                        raise ValueError(error_msg)
 
-                                        url_parsed = urlparse(url)
-                                        endpoint_parsed = urlparse(endpoint_url)
-                                        if (
-                                            url_parsed.netloc != endpoint_parsed.netloc
-                                            or url_parsed.scheme
-                                            != endpoint_parsed.scheme
-                                        ):
-                                            error_msg = (
-                                                "Endpoint origin does not match "
-                                                f"connection origin: {endpoint_url}"
-                                            )
-                                            logger.error(error_msg)
-                                            raise ValueError(error_msg)
+                                    task_status.started(endpoint_url)
 
-                                        task_status.started(endpoint_url)
-
-                                    case "message":
-                                        try:
-                                            message = types.JSONRPCMessage.model_validate_json(  # noqa: E501
-                                                sse.data
-                                            )
-                                            logger.debug(
-                                                f"Received server message: {message}"
-                                            )
-                                        except Exception as exc:
-                                            logger.error(
-                                                f"Error parsing server message: {exc}"
-                                            )
-                                            await read_stream_writer.send(exc)
-                                            continue
-
-                                        await read_stream_writer.send(message)
-                                    case _:
-                                        logger.warning(
-                                            f"Unknown SSE event: {sse.event}"
+                                elif event_type == "message":
+                                    try:
+                                        message = types.JSONRPCMessage.model_validate_json(  # noqa: E501
+                                            sse.data
                                         )
+                                        logger.debug(
+                                            f"Received server message: {message}"
+                                        )
+                                    except Exception as exc:
+                                        logger.error(
+                                            f"Error parsing server message: {exc}"
+                                        )
+                                        await read_stream_writer.send(exc)
+                                        continue
+
+                                    await read_stream_writer.send(message)
+                                else:
+                                    logger.warning(
+                                        f"Unknown SSE event: {sse.event}"
+                                    )
                         except Exception as exc:
                             logger.error(f"Error in sse_reader: {exc}")
                             await read_stream_writer.send(exc)

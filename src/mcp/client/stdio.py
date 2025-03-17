@@ -1,7 +1,7 @@
 import os
 import sys
 from contextlib import asynccontextmanager
-from typing import Literal
+from typing import Literal, Union, Dict, List
 
 import anyio
 import anyio.lowlevel
@@ -31,12 +31,12 @@ DEFAULT_INHERITED_ENV_VARS = (
 )
 
 
-def get_default_environment() -> dict[str, str]:
+def get_default_environment() -> Dict[str, str]:
     """
     Returns a default environment object including only environment variables deemed
     safe to inherit.
     """
-    env: dict[str, str] = {}
+    env: Dict[str, str] = {}
 
     for key in DEFAULT_INHERITED_ENV_VARS:
         value = os.environ.get(key)
@@ -56,10 +56,10 @@ class StdioServerParameters(BaseModel):
     command: str
     """The executable to run to start the server."""
 
-    args: list[str] = Field(default_factory=list)
+    args: List[str] = Field(default_factory=list)
     """Command line arguments to pass to the executable."""
 
-    env: dict[str, str] | None = None
+    env: Union[Dict[str, str], None] = None
     """
     The environment to use when spawning the process.
 
@@ -88,8 +88,8 @@ async def stdio_client(server: StdioServerParameters):
     Client transport for stdio: this will connect to a server by spawning a
     process and communicating with it over stdin/stdout.
     """
-    read_stream: MemoryObjectReceiveStream[types.JSONRPCMessage | Exception]
-    read_stream_writer: MemoryObjectSendStream[types.JSONRPCMessage | Exception]
+    read_stream: MemoryObjectReceiveStream[Union[types.JSONRPCMessage, Exception]]
+    read_stream_writer: MemoryObjectSendStream[Union[types.JSONRPCMessage, Exception]]
 
     write_stream: MemoryObjectSendStream[types.JSONRPCMessage]
     write_stream_reader: MemoryObjectReceiveStream[types.JSONRPCMessage]

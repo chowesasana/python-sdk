@@ -1,3 +1,5 @@
+from typing import Union, List
+
 import pytest
 from pydantic import AnyUrl
 
@@ -25,7 +27,9 @@ async def test_resource_template_edge_cases():
     with pytest.raises(ValueError, match="Mismatch between URI parameters"):
 
         @mcp.resource("resource://users/{user_id}/profile")
-        def get_user_profile(user_id: str, optional_param: str | None = None) -> str:
+        def get_user_profile(
+            user_id: str, optional_param: Union[str, None] = None
+        ) -> str:
             return f"Profile for user {user_id}"
 
     # Test case 3: Template with mismatched parameters

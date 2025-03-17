@@ -1,4 +1,4 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, List, Union
 
 import anyio
 import pytest
@@ -58,7 +58,7 @@ async def test_request_cancellation():
 
         # Register the tool handler
         @server.call_tool()
-        async def handle_call_tool(name: str, arguments: dict | None) -> list:
+        async def handle_call_tool(name: str, arguments: Union[dict, None]) -> list:
             nonlocal request_id, ev_tool_called
             if name == "slow_tool":
                 request_id = server.request_context.request_id
@@ -69,7 +69,7 @@ async def test_request_cancellation():
 
         # Register the tool so it shows up in list_tools
         @server.list_tools()
-        async def handle_list_tools() -> list[types.Tool]:
+        async def handle_list_tools() -> List[types.Tool]:
             return [
                 types.Tool(
                     name="slow_tool",

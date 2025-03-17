@@ -4,7 +4,7 @@ import inspect
 import json
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Union, List
 
 import anyio
 import anyio.to_thread
@@ -51,7 +51,7 @@ class FunctionResource(Resource):
 
     fn: Callable[[], Any] = Field(exclude=True)
 
-    async def read(self) -> str | bytes:
+    async def read(self) -> Union[str, bytes]:
         """Read the resource by calling the wrapped function."""
         try:
             result = (
@@ -105,7 +105,7 @@ class FileResource(Resource):
         mime_type = info.data.get("mime_type", "text/plain")
         return not mime_type.startswith("text/")
 
-    async def read(self) -> str | bytes:
+    async def read(self) -> Union[str, bytes]:
         """Read the file content."""
         try:
             if self.is_binary:
@@ -123,7 +123,7 @@ class HttpResource(Resource):
         default="application/json", description="MIME type of the resource content"
     )
 
-    async def read(self) -> str | bytes:
+    async def read(self) -> Union[str, bytes]:
         """Read the HTTP content."""
         async with httpx.AsyncClient() as client:
             response = await client.get(self.url)
@@ -138,7 +138,7 @@ class DirectoryResource(Resource):
     recursive: bool = Field(
         default=False, description="Whether to list files recursively"
     )
-    pattern: str | None = Field(
+    pattern: Union[str, None] = Field(
         default=None, description="Optional glob pattern to filter files"
     )
     mime_type: str = Field(
@@ -153,7 +153,7 @@ class DirectoryResource(Resource):
             raise ValueError("Path must be absolute")
         return path
 
-    def list_files(self) -> list[Path]:
+    def list_files(self) -> List[Path]:
         """List files in the directory."""
         if not self.path.exists():
             raise FileNotFoundError(f"Directory not found: {self.path}")

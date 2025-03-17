@@ -1,7 +1,7 @@
 import multiprocessing
 import socket
 import time
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator, Generator, List, Union
 
 import anyio
 import pytest
@@ -46,7 +46,7 @@ class ServerTest(Server):
         super().__init__(SERVER_NAME)
 
         @self.read_resource()
-        async def handle_read_resource(uri: AnyUrl) -> str | bytes:
+        async def handle_read_resource(uri: AnyUrl) -> Union[str, bytes]:
             if uri.scheme == "foobar":
                 return f"Read {uri.host}"
             elif uri.scheme == "slow":
@@ -61,7 +61,7 @@ class ServerTest(Server):
             )
 
         @self.list_tools()
-        async def handle_list_tools() -> list[Tool]:
+        async def handle_list_tools() -> List[Tool]:
             return [
                 Tool(
                     name="test_tool",
@@ -71,7 +71,7 @@ class ServerTest(Server):
             ]
 
         @self.call_tool()
-        async def handle_call_tool(name: str, args: dict) -> list[TextContent]:
+        async def handle_call_tool(name: str, args: dict) -> List[TextContent]:
             return [TextContent(type="text", text=f"Called {name}")]
 
 

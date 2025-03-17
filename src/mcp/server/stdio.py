@@ -21,6 +21,7 @@ Example usage:
 import sys
 from contextlib import asynccontextmanager
 from io import TextIOWrapper
+from typing import Union
 
 import anyio
 import anyio.lowlevel
@@ -31,8 +32,8 @@ import mcp.types as types
 
 @asynccontextmanager
 async def stdio_server(
-    stdin: anyio.AsyncFile[str] | None = None,
-    stdout: anyio.AsyncFile[str] | None = None,
+    stdin: Union[anyio.AsyncFile[str], None] = None,
+    stdout: Union[anyio.AsyncFile[str], None] = None,
 ):
     """
     Server transport for stdio: this communicates with an MCP client by reading
@@ -47,8 +48,8 @@ async def stdio_server(
     if not stdout:
         stdout = anyio.wrap_file(TextIOWrapper(sys.stdout.buffer, encoding="utf-8"))
 
-    read_stream: MemoryObjectReceiveStream[types.JSONRPCMessage | Exception]
-    read_stream_writer: MemoryObjectSendStream[types.JSONRPCMessage | Exception]
+    read_stream: MemoryObjectReceiveStream[types.Union[JSONRPCMessage, Exception]]
+    read_stream_writer: MemoryObjectSendStream[types.Union[JSONRPCMessage, Exception]]
 
     write_stream: MemoryObjectSendStream[types.JSONRPCMessage]
     write_stream_reader: MemoryObjectReceiveStream[types.JSONRPCMessage]

@@ -6,18 +6,19 @@ from pydantic import BaseModel
 from mcp.shared.context import RequestContext
 from mcp.shared.session import BaseSession
 from mcp.types import ProgressToken
+from typing import Dict, List, Optional, Tuple, Union
 
 
 class Progress(BaseModel):
     progress: float
-    total: float | None
+    total: Union[float, None]
 
 
 @dataclass
 class ProgressContext:
     session: BaseSession
     progress_token: ProgressToken
-    total: float | None
+    total: Union[float, None]
     current: float = field(default=0.0, init=False)
 
     async def progress(self, amount: float) -> None:
@@ -29,7 +30,7 @@ class ProgressContext:
 
 
 @contextmanager
-def progress(ctx: RequestContext, total: float | None = None):
+def progress(ctx: RequestContext, total: Union[float, None] = None):
     if ctx.meta is None or ctx.meta.progressToken is None:
         raise ValueError("No progress token provided")
 

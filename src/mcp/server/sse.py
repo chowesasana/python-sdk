@@ -33,7 +33,7 @@ See SseServerTransport class documentation for more details.
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, Union, Dict
 from urllib.parse import quote
 from uuid import UUID, uuid4
 
@@ -64,7 +64,7 @@ class SseServerTransport:
 
     _endpoint: str
     _read_stream_writers: dict[
-        UUID, MemoryObjectSendStream[types.JSONRPCMessage | Exception]
+        UUID, MemoryObjectSendStream[Union[types.JSONRPCMessage, Exception]]
     ]
 
     def __init__(self, endpoint: str) -> None:
@@ -85,8 +85,8 @@ class SseServerTransport:
             raise ValueError("connect_sse can only handle HTTP requests")
 
         logger.debug("Setting up SSE connection")
-        read_stream: MemoryObjectReceiveStream[types.JSONRPCMessage | Exception]
-        read_stream_writer: MemoryObjectSendStream[types.JSONRPCMessage | Exception]
+        read_stream: MemoryObjectReceiveStream[types.Union[JSONRPCMessage, Exception]]
+        read_stream_writer: MemoryObjectSendStream[types.Union[JSONRPCMessage, Exception]]
 
         write_stream: MemoryObjectSendStream[types.JSONRPCMessage]
         write_stream_reader: MemoryObjectReceiveStream[types.JSONRPCMessage]
@@ -100,7 +100,7 @@ class SseServerTransport:
         logger.debug(f"Created new session with ID: {session_id}")
 
         sse_stream_writer, sse_stream_reader = anyio.create_memory_object_stream[
-            dict[str, Any]
+            Dict[str, Any]
         ](0)
 
         async def sse_writer():

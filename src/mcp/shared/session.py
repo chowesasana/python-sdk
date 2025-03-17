@@ -1,7 +1,7 @@
 import logging
 from contextlib import AsyncExitStack
 from datetime import timedelta
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar, Dict
 
 import anyio
 import anyio.lowlevel
@@ -37,7 +37,8 @@ ReceiveNotificationT = TypeVar(
     "ReceiveNotificationT", ClientNotification, ServerNotification
 )
 
-RequestId = str | int
+from typing import Union
+RequestId = Union[str, int]
 
 
 class RequestResponder(Generic[ReceiveRequestT, SendResultT]):
@@ -59,7 +60,7 @@ class RequestResponder(Generic[ReceiveRequestT, SendResultT]):
     def __init__(
         self,
         request_id: RequestId,
-        request_meta: RequestParams.Meta | None,
+        request_meta: Union[RequestParams.Meta, None],
         request: ReceiveRequestT,
         session: """BaseSession[
             SendRequestT,
@@ -97,7 +98,7 @@ class RequestResponder(Generic[ReceiveRequestT, SendResultT]):
                 raise RuntimeError("No active cancel scope")
             self._cancel_scope.__exit__(exc_type, exc_val, exc_tb)
 
-    async def respond(self, response: SendResultT | ErrorData) -> None:
+    async def respond(self, response: Union[SendResultT, ErrorData]) -> None:
         """Send a response for this request.
 
         Must be called within a context manager block.
@@ -158,19 +159,19 @@ class BaseSession(
     """
 
     _response_streams: dict[
-        RequestId, MemoryObjectSendStream[JSONRPCResponse | JSONRPCError]
+        RequestId, MemoryObjectSendStream[Union[JSONRPCResponse, JSONRPCError]]
     ]
     _request_id: int
-    _in_flight: dict[RequestId, RequestResponder[ReceiveRequestT, SendResultT]]
+    _in_flight: Dict[RequestId, RequestResponder[ReceiveRequestT, SendResultT]]
 
     def __init__(
         self,
-        read_stream: MemoryObjectReceiveStream[JSONRPCMessage | Exception],
+        read_stream: MemoryObjectReceiveStream[Union[JSONRPCMessage, Exception]],
         write_stream: MemoryObjectSendStream[JSONRPCMessage],
         receive_request_type: type[ReceiveRequestT],
         receive_notification_type: type[ReceiveNotificationT],
         # If none, reading will never time out
-        read_timeout_seconds: timedelta | None = None,
+        read_timeout_seconds: Union[timedelta, None] = None,
     ) -> None:
         self._read_stream = read_stream
         self._write_stream = write_stream
@@ -184,9 +185,11 @@ class BaseSession(
         self._exit_stack = AsyncExitStack()
         self._incoming_message_stream_writer, self._incoming_message_stream_reader = (
             anyio.create_memory_object_stream[
-                RequestResponder[ReceiveRequestT, SendResultT]
-                | ReceiveNotificationT
-                | Exception
+                Union[
+                    RequestResponder[ReceiveRequestT, SendResultT],
+                    ReceiveNotificationT,
+                    Exception
+                ]
             ]()
         )
         self._exit_stack.push_async_callback(
@@ -227,7 +230,7 @@ class BaseSession(
         self._request_id = request_id + 1
 
         response_stream, response_stream_reader = anyio.create_memory_object_stream[
-            JSONRPCResponse | JSONRPCError
+            Union[JSONRPCResponse, JSONRPCError]
         ](1)
         self._response_streams[request_id] = response_stream
 
@@ -281,7 +284,7 @@ class BaseSession(
         await self._write_stream.send(JSONRPCMessage(jsonrpc_notification))
 
     async def _send_response(
-        self, request_id: RequestId, response: SendResultT | ErrorData
+        self, request_id: RequestId, response: Union[SendResultT, ErrorData]
     ) -> None:
         if isinstance(response, ErrorData):
             jsonrpc_error = JSONRPCError(jsonrpc="2.0", id=request_id, error=response)
@@ -380,7 +383,7 @@ class BaseSession(
         """
 
     async def send_progress_notification(
-        self, progress_token: str | int, progress: float, total: float | None = None
+        self, progress_token: Union[str, int], progress: float, total: Union[float, None] = None
     ) -> None:
         """
         Sends a progress notification for a request that is currently being
@@ -391,8 +394,10 @@ class BaseSession(
     def incoming_messages(
         self,
     ) -> MemoryObjectReceiveStream[
-        RequestResponder[ReceiveRequestT, SendResultT]
-        | ReceiveNotificationT
-        | Exception
+        Union[
+            RequestResponder[ReceiveRequestT, SendResultT],
+            ReceiveNotificationT,
+            Exception
+        ]
     ]:
         return self._incoming_message_stream_reader

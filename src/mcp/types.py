@@ -2,14 +2,17 @@ from typing import (
     Annotated,
     Any,
     Callable,
+    Dict,
     Generic,
+    List,
     Literal,
-    TypeAlias,
     TypeVar,
+    Union,
 )
 
 from pydantic import BaseModel, ConfigDict, Field, FileUrl, RootModel
 from pydantic.networks import AnyUrl, UrlConstraints
+from typing_extensions import TypeAlias
 
 """
 Model Context Protocol bindings for Python
@@ -31,16 +34,16 @@ for reference.
 
 LATEST_PROTOCOL_VERSION = "2024-11-05"
 
-ProgressToken = str | int
+ProgressToken = Union[str, int]
 Cursor = str
 Role = Literal["user", "assistant"]
-RequestId = str | int
+RequestId = Union[str, int]
 AnyFunction: TypeAlias = Callable[..., Any]
 
 
 class RequestParams(BaseModel):
     class Meta(BaseModel):
-        progressToken: ProgressToken | None = None
+        progressToken: Union[ProgressToken, None] = None
         """
         If specified, the caller is requesting out-of-band progress notifications for
         this request (as represented by notifications/progress). The value of this
@@ -50,14 +53,14 @@ class RequestParams(BaseModel):
 
         model_config = ConfigDict(extra="allow")
 
-    meta: Meta | None = Field(alias="_meta", default=None)
+    meta: Union[Meta, None] = Field(alias="_meta", default=None)
 
 
 class NotificationParams(BaseModel):
     class Meta(BaseModel):
         model_config = ConfigDict(extra="allow")
 
-    meta: Meta | None = Field(alias="_meta", default=None)
+    meta: Union[Meta, None] = Field(alias="_meta", default=None)
     """
     This parameter name is reserved by MCP to allow clients and servers to attach
     additional metadata to their notifications.
@@ -78,7 +81,7 @@ class Request(BaseModel, Generic[RequestParamsT, MethodT]):
 
 
 class PaginatedRequest(Request[RequestParamsT, MethodT]):
-    cursor: Cursor | None = None
+    cursor: Union[Cursor, None] = None
     """
     An opaque token representing the current pagination position.
     If provided, the server should return results starting after this cursor.
@@ -97,7 +100,7 @@ class Result(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    meta: dict[str, Any] | None = Field(alias="_meta", default=None)
+    meta: Union[Dict[str, Any], None] = Field(alias="_meta", default=None)
     """
     This result property is reserved by the protocol to allow clients and servers to
     attach additional metadata to their responses.
@@ -105,7 +108,7 @@ class Result(BaseModel):
 
 
 class PaginatedResult(Result):
-    nextCursor: Cursor | None = None
+    nextCursor: Union[Cursor, None] = None
     """
     An opaque token representing the pagination position after the last returned result.
     If present, there may be more results available.
@@ -117,14 +120,14 @@ class JSONRPCRequest(Request):
 
     jsonrpc: Literal["2.0"]
     id: RequestId
-    params: dict[str, Any] | None = None
+    params: Union[Dict[str, Any], None] = None
 
 
 class JSONRPCNotification(Notification):
     """A notification which does not expect a response."""
 
     jsonrpc: Literal["2.0"]
-    params: dict[str, Any] | None = None
+    params: Union[Dict[str, Any], None] = None
 
 
 class JSONRPCResponse(BaseModel):
@@ -132,7 +135,7 @@ class JSONRPCResponse(BaseModel):
 
     jsonrpc: Literal["2.0"]
     id: RequestId
-    result: dict[str, Any]
+    result: Dict[str, Any]
     model_config = ConfigDict(extra="allow")
 
 
@@ -156,7 +159,7 @@ class ErrorData(BaseModel):
     sentence.
     """
 
-    data: Any | None = None
+    data: Union[Any, None] = None
     """
     Additional information about the error. The value of this member is defined by the
     sender (e.g. detailed error information, nested errors etc.).
@@ -169,13 +172,13 @@ class JSONRPCError(BaseModel):
     """A response to a request that indicates an error occurred."""
 
     jsonrpc: Literal["2.0"]
-    id: str | int
+    id: Union[str, int]
     error: ErrorData
     model_config = ConfigDict(extra="allow")
 
 
 class JSONRPCMessage(
-    RootModel[JSONRPCRequest | JSONRPCNotification | JSONRPCResponse | JSONRPCError]
+    RootModel[Union[JSONRPCRequest, JSONRPCNotification, JSONRPCResponse, JSONRPCError]]
 ):
     pass
 
@@ -195,7 +198,7 @@ class Implementation(BaseModel):
 class RootsCapability(BaseModel):
     """Capability for root operations."""
 
-    listChanged: bool | None = None
+    listChanged: Union[bool, None] = None
     """Whether the client supports notifications for changes to the roots list."""
     model_config = ConfigDict(extra="allow")
 
@@ -209,11 +212,11 @@ class SamplingCapability(BaseModel):
 class ClientCapabilities(BaseModel):
     """Capabilities a client may support."""
 
-    experimental: dict[str, dict[str, Any]] | None = None
+    experimental: Union[Dict[str, Dict[str, Any]], None] = None
     """Experimental, non-standard capabilities that the client supports."""
-    sampling: SamplingCapability | None = None
+    sampling: Union[SamplingCapability, None] = None
     """Present if the client supports sampling from an LLM."""
-    roots: RootsCapability | None = None
+    roots: Union[RootsCapability, None] = None
     """Present if the client supports listing roots."""
     model_config = ConfigDict(extra="allow")
 
@@ -221,7 +224,7 @@ class ClientCapabilities(BaseModel):
 class PromptsCapability(BaseModel):
     """Capability for prompts operations."""
 
-    listChanged: bool | None = None
+    listChanged: Union[bool, None] = None
     """Whether this server supports notifications for changes to the prompt list."""
     model_config = ConfigDict(extra="allow")
 
@@ -229,9 +232,9 @@ class PromptsCapability(BaseModel):
 class ResourcesCapability(BaseModel):
     """Capability for resources operations."""
 
-    subscribe: bool | None = None
+    subscribe: Union[bool, None] = None
     """Whether this server supports subscribing to resource updates."""
-    listChanged: bool | None = None
+    listChanged: Union[bool, None] = None
     """Whether this server supports notifications for changes to the resource list."""
     model_config = ConfigDict(extra="allow")
 
@@ -239,7 +242,7 @@ class ResourcesCapability(BaseModel):
 class ToolsCapability(BaseModel):
     """Capability for tools operations."""
 
-    listChanged: bool | None = None
+    listChanged: Union[bool, None] = None
     """Whether this server supports notifications for changes to the tool list."""
     model_config = ConfigDict(extra="allow")
 
@@ -253,15 +256,15 @@ class LoggingCapability(BaseModel):
 class ServerCapabilities(BaseModel):
     """Capabilities that a server may support."""
 
-    experimental: dict[str, dict[str, Any]] | None = None
+    experimental: Union[Dict[str, Dict[str, Any]], None] = None
     """Experimental, non-standard capabilities that the server supports."""
-    logging: LoggingCapability | None = None
+    logging: Union[LoggingCapability, None] = None
     """Present if the server supports sending log messages to the client."""
-    prompts: PromptsCapability | None = None
+    prompts: Union[PromptsCapability, None] = None
     """Present if the server offers any prompt templates."""
-    resources: ResourcesCapability | None = None
+    resources: Union[ResourcesCapability, None] = None
     """Present if the server offers any resources to read."""
-    tools: ToolsCapability | None = None
+    tools: Union[ToolsCapability, None] = None
     """Present if the server offers any tools to call."""
     model_config = ConfigDict(extra="allow")
 
@@ -269,7 +272,7 @@ class ServerCapabilities(BaseModel):
 class InitializeRequestParams(RequestParams):
     """Parameters for the initialize request."""
 
-    protocolVersion: str | int
+    protocolVersion: Union[str, int]
     """The latest version of the Model Context Protocol that the client supports."""
     capabilities: ClientCapabilities
     clientInfo: Implementation
@@ -289,11 +292,11 @@ class InitializeRequest(Request):
 class InitializeResult(Result):
     """After receiving an initialize request from the client, the server sends this."""
 
-    protocolVersion: str | int
+    protocolVersion: Union[str, int]
     """The version of the Model Context Protocol that the server wants to use."""
     capabilities: ServerCapabilities
     serverInfo: Implementation
-    instructions: str | None = None
+    instructions: Union[str, None] = None
     """Instructions describing how to use the server and its features."""
 
 
@@ -304,7 +307,7 @@ class InitializedNotification(Notification):
     """
 
     method: Literal["notifications/initialized"]
-    params: NotificationParams | None = None
+    params: Union[NotificationParams, None] = None
 
 
 class PingRequest(Request):
@@ -314,7 +317,7 @@ class PingRequest(Request):
     """
 
     method: Literal["ping"]
-    params: RequestParams | None = None
+    params: Union[RequestParams, None] = None
 
 
 class ProgressNotificationParams(NotificationParams):
@@ -330,7 +333,7 @@ class ProgressNotificationParams(NotificationParams):
     The progress thus far. This should increase every time progress is made, even if the
     total is unknown.
     """
-    total: float | None = None
+    total: Union[float, None] = None
     """Total number of items to process (or total progress required), if known."""
     model_config = ConfigDict(extra="allow")
 
@@ -349,12 +352,12 @@ class ListResourcesRequest(PaginatedRequest):
     """Sent from the client to request a list of resources the server has."""
 
     method: Literal["resources/list"]
-    params: RequestParams | None = None
+    params: Union[RequestParams, None] = None
 
 
 class Annotations(BaseModel):
-    audience: list[Role] | None = None
-    priority: Annotated[float, Field(ge=0.0, le=1.0)] | None = None
+    audience: Union[List[Role], None] = None
+    priority: Union[Annotated[float, Field(ge=0.0, le=1.0)], None] = None
     model_config = ConfigDict(extra="allow")
 
 
@@ -365,18 +368,18 @@ class Resource(BaseModel):
     """The URI of this resource."""
     name: str
     """A human-readable name for this resource."""
-    description: str | None = None
+    description: Union[str, None] = None
     """A description of what this resource represents."""
-    mimeType: str | None = None
+    mimeType: Union[str, None] = None
     """The MIME type of this resource, if known."""
-    size: int | None = None
+    size: Union[int, None] = None
     """
     The size of the raw resource content, in bytes (i.e., before base64 encoding
     or any tokenization), if known.
 
     This can be used by Hosts to display file sizes and estimate context window usage.
     """
-    annotations: Annotations | None = None
+    annotations: Union[Annotations, None] = None
     model_config = ConfigDict(extra="allow")
 
 
@@ -390,34 +393,34 @@ class ResourceTemplate(BaseModel):
     """
     name: str
     """A human-readable name for the type of resource this template refers to."""
-    description: str | None = None
+    description: Union[str, None] = None
     """A human-readable description of what this template is for."""
-    mimeType: str | None = None
+    mimeType: Union[str, None] = None
     """
     The MIME type for all resources that match this template. This should only be
     included if all resources matching this template have the same type.
     """
-    annotations: Annotations | None = None
+    annotations: Union[Annotations, None] = None
     model_config = ConfigDict(extra="allow")
 
 
 class ListResourcesResult(PaginatedResult):
     """The server's response to a resources/list request from the client."""
 
-    resources: list[Resource]
+    resources: List[Resource]
 
 
 class ListResourceTemplatesRequest(PaginatedRequest):
     """Sent from the client to request a list of resource templates the server has."""
 
     method: Literal["resources/templates/list"]
-    params: RequestParams | None = None
+    params: Union[RequestParams, None] = None
 
 
 class ListResourceTemplatesResult(PaginatedResult):
     """The server's response to a resources/templates/list request from the client."""
 
-    resourceTemplates: list[ResourceTemplate]
+    resourceTemplates: List[ResourceTemplate]
 
 
 class ReadResourceRequestParams(RequestParams):
@@ -443,7 +446,7 @@ class ResourceContents(BaseModel):
 
     uri: Annotated[AnyUrl, UrlConstraints(host_required=False)]
     """The URI of this resource."""
-    mimeType: str | None = None
+    mimeType: Union[str, None] = None
     """The MIME type of this resource, if known."""
     model_config = ConfigDict(extra="allow")
 
@@ -468,7 +471,7 @@ class BlobResourceContents(ResourceContents):
 class ReadResourceResult(Result):
     """The server's response to a resources/read request from the client."""
 
-    contents: list[TextResourceContents | BlobResourceContents]
+    contents: List[Union[TextResourceContents, BlobResourceContents]]
 
 
 class ResourceListChangedNotification(Notification):
@@ -478,7 +481,7 @@ class ResourceListChangedNotification(Notification):
     """
 
     method: Literal["notifications/resources/list_changed"]
-    params: NotificationParams | None = None
+    params: Union[NotificationParams, None] = None
 
 
 class SubscribeRequestParams(RequestParams):
@@ -545,7 +548,7 @@ class ListPromptsRequest(PaginatedRequest):
     """Sent from the client to request a list of prompts and prompt templates."""
 
     method: Literal["prompts/list"]
-    params: RequestParams | None = None
+    params: Union[RequestParams, None] = None
 
 
 class PromptArgument(BaseModel):
@@ -553,9 +556,9 @@ class PromptArgument(BaseModel):
 
     name: str
     """The name of the argument."""
-    description: str | None = None
+    description: Union[str, None] = None
     """A human-readable description of the argument."""
-    required: bool | None = None
+    required: Union[bool, None] = None
     """Whether this argument must be provided."""
     model_config = ConfigDict(extra="allow")
 
@@ -565,9 +568,9 @@ class Prompt(BaseModel):
 
     name: str
     """The name of the prompt or prompt template."""
-    description: str | None = None
+    description: Union[str, None] = None
     """An optional description of what this prompt provides."""
-    arguments: list[PromptArgument] | None = None
+    arguments: Union[List[PromptArgument], None] = None
     """A list of arguments to use for templating the prompt."""
     model_config = ConfigDict(extra="allow")
 
@@ -575,7 +578,7 @@ class Prompt(BaseModel):
 class ListPromptsResult(PaginatedResult):
     """The server's response to a prompts/list request from the client."""
 
-    prompts: list[Prompt]
+    prompts: List[Prompt]
 
 
 class GetPromptRequestParams(RequestParams):
@@ -583,7 +586,7 @@ class GetPromptRequestParams(RequestParams):
 
     name: str
     """The name of the prompt or prompt template."""
-    arguments: dict[str, str] | None = None
+    arguments: Union[Dict[str, str], None] = None
     """Arguments to use for templating the prompt."""
     model_config = ConfigDict(extra="allow")
 
@@ -601,7 +604,7 @@ class TextContent(BaseModel):
     type: Literal["text"]
     text: str
     """The text content of the message."""
-    annotations: Annotations | None = None
+    annotations: Union[Annotations, None] = None
     model_config = ConfigDict(extra="allow")
 
 
@@ -616,7 +619,7 @@ class ImageContent(BaseModel):
     The MIME type of the image. Different providers may support different
     image types.
     """
-    annotations: Annotations | None = None
+    annotations: Union[Annotations, None] = None
     model_config = ConfigDict(extra="allow")
 
 
@@ -624,7 +627,7 @@ class SamplingMessage(BaseModel):
     """Describes a message issued to or received from an LLM API."""
 
     role: Role
-    content: TextContent | ImageContent
+    content: Union[TextContent, ImageContent]
     model_config = ConfigDict(extra="allow")
 
 
@@ -637,8 +640,8 @@ class EmbeddedResource(BaseModel):
     """
 
     type: Literal["resource"]
-    resource: TextResourceContents | BlobResourceContents
-    annotations: Annotations | None = None
+    resource: Union[TextResourceContents, BlobResourceContents]
+    annotations: Union[Annotations, None] = None
     model_config = ConfigDict(extra="allow")
 
 
@@ -646,16 +649,16 @@ class PromptMessage(BaseModel):
     """Describes a message returned as part of a prompt."""
 
     role: Role
-    content: TextContent | ImageContent | EmbeddedResource
+    content: Union[TextContent, ImageContent, EmbeddedResource]
     model_config = ConfigDict(extra="allow")
 
 
 class GetPromptResult(Result):
     """The server's response to a prompts/get request from the client."""
 
-    description: str | None = None
+    description: Union[str, None] = None
     """An optional description for the prompt."""
-    messages: list[PromptMessage]
+    messages: List[PromptMessage]
 
 
 class PromptListChangedNotification(Notification):
@@ -665,14 +668,14 @@ class PromptListChangedNotification(Notification):
     """
 
     method: Literal["notifications/prompts/list_changed"]
-    params: NotificationParams | None = None
+    params: Union[NotificationParams, None] = None
 
 
 class ListToolsRequest(PaginatedRequest):
     """Sent from the client to request a list of tools the server has."""
 
     method: Literal["tools/list"]
-    params: RequestParams | None = None
+    params: Union[RequestParams, None] = None
 
 
 class Tool(BaseModel):
@@ -680,9 +683,9 @@ class Tool(BaseModel):
 
     name: str
     """The name of the tool."""
-    description: str | None = None
+    description: Union[str, None] = None
     """A human-readable description of the tool."""
-    inputSchema: dict[str, Any]
+    inputSchema: Dict[str, Any]
     """A JSON Schema object defining the expected parameters for the tool."""
     model_config = ConfigDict(extra="allow")
 
@@ -690,14 +693,14 @@ class Tool(BaseModel):
 class ListToolsResult(PaginatedResult):
     """The server's response to a tools/list request from the client."""
 
-    tools: list[Tool]
+    tools: List[Tool]
 
 
 class CallToolRequestParams(RequestParams):
     """Parameters for calling a tool."""
 
     name: str
-    arguments: dict[str, Any] | None = None
+    arguments: Union[Dict[str, Any], None] = None
     model_config = ConfigDict(extra="allow")
 
 
@@ -711,7 +714,7 @@ class CallToolRequest(Request):
 class CallToolResult(Result):
     """The server's response to a tool call."""
 
-    content: list[TextContent | ImageContent | EmbeddedResource]
+    content: List[Union[TextContent, ImageContent, EmbeddedResource]]
     isError: bool = False
 
 
@@ -722,7 +725,7 @@ class ToolListChangedNotification(Notification):
     """
 
     method: Literal["notifications/tools/list_changed"]
-    params: NotificationParams | None = None
+    params: Union[NotificationParams, None] = None
 
 
 LoggingLevel = Literal[
@@ -750,7 +753,7 @@ class LoggingMessageNotificationParams(NotificationParams):
 
     level: LoggingLevel
     """The severity of this log message."""
-    logger: str | None = None
+    logger: Union[str, None] = None
     """An optional name of the logger issuing this message."""
     data: Any
     """
@@ -773,7 +776,7 @@ IncludeContext = Literal["none", "thisServer", "allServers"]
 class ModelHint(BaseModel):
     """Hints to use for model selection."""
 
-    name: str | None = None
+    name: Union[str, None] = None
     """A hint for a model name."""
 
     model_config = ConfigDict(extra="allow")
@@ -795,7 +798,7 @@ class ModelPreferences(BaseModel):
     balance them against other considerations.
     """
 
-    hints: list[ModelHint] | None = None
+    hints: Union[List[ModelHint], None] = None
     """
     Optional hints to use for model selection.
 
@@ -806,21 +809,21 @@ class ModelPreferences(BaseModel):
     MAY still use the priorities to select from ambiguous matches.
     """
 
-    costPriority: float | None = None
+    costPriority: Union[float, None] = None
     """
     How much to prioritize cost when selecting a model. A value of 0 means cost
     is not important, while a value of 1 means cost is the most important
     factor.
     """
 
-    speedPriority: float | None = None
+    speedPriority: Union[float, None] = None
     """
     How much to prioritize sampling speed (latency) when selecting a model. A
     value of 0 means speed is not important, while a value of 1 means speed is
     the most important factor.
     """
 
-    intelligencePriority: float | None = None
+    intelligencePriority: Union[float, None] = None
     """
     How much to prioritize intelligence and capabilities when selecting a
     model. A value of 0 means intelligence is not important, while a value of 1
@@ -833,24 +836,24 @@ class ModelPreferences(BaseModel):
 class CreateMessageRequestParams(RequestParams):
     """Parameters for creating a message."""
 
-    messages: list[SamplingMessage]
-    modelPreferences: ModelPreferences | None = None
+    messages: List[SamplingMessage]
+    modelPreferences: Union[ModelPreferences, None] = None
     """
     The server's preferences for which model to select. The client MAY ignore
     these preferences.
     """
-    systemPrompt: str | None = None
+    systemPrompt: Union[str, None] = None
     """An optional system prompt the server wants to use for sampling."""
-    includeContext: IncludeContext | None = None
+    includeContext: Union[IncludeContext, None] = None
     """
     A request to include context from one or more MCP servers (including the caller), to
     be attached to the prompt.
     """
-    temperature: float | None = None
+    temperature: Union[float, None] = None
     maxTokens: int
     """The maximum number of tokens to sample, as requested by the server."""
-    stopSequences: list[str] | None = None
-    metadata: dict[str, Any] | None = None
+    stopSequences: Union[List[str], None] = None
+    metadata: Union[Dict[str, Any], None] = None
     """Optional metadata to pass through to the LLM provider."""
     model_config = ConfigDict(extra="allow")
 
@@ -862,17 +865,17 @@ class CreateMessageRequest(Request):
     params: CreateMessageRequestParams
 
 
-StopReason = Literal["endTurn", "stopSequence", "maxTokens"] | str
+StopReason = Union[Literal["endTurn", "stopSequence", "maxTokens"], str]
 
 
 class CreateMessageResult(Result):
     """The client's response to a sampling/create_message request from the server."""
 
     role: Role
-    content: TextContent | ImageContent
+    content: Union[TextContent, ImageContent]
     model: str
     """The name of the model that generated the message."""
-    stopReason: StopReason | None = None
+    stopReason: Union[StopReason, None] = None
     """The reason why sampling stopped, if known."""
 
 
@@ -907,7 +910,7 @@ class CompletionArgument(BaseModel):
 class CompleteRequestParams(RequestParams):
     """Parameters for completion requests."""
 
-    ref: ResourceReference | PromptReference
+    ref: Union[ResourceReference, PromptReference]
     argument: CompletionArgument
     model_config = ConfigDict(extra="allow")
 
@@ -922,14 +925,14 @@ class CompleteRequest(Request):
 class Completion(BaseModel):
     """Completion information."""
 
-    values: list[str]
+    values: List[str]
     """An array of completion values. Must not exceed 100 items."""
-    total: int | None = None
+    total: Union[int, None] = None
     """
     The total number of completion options available. This can exceed the number of
     values actually sent in the response.
     """
-    hasMore: bool | None = None
+    hasMore: Union[bool, None] = None
     """
     Indicates whether there are additional completion options beyond those provided in
     the current response, even if the exact total is unknown.
@@ -955,7 +958,7 @@ class ListRootsRequest(Request):
     """
 
     method: Literal["roots/list"]
-    params: RequestParams | None = None
+    params: Union[RequestParams, None] = None
 
 
 class Root(BaseModel):
@@ -967,7 +970,7 @@ class Root(BaseModel):
     This restriction may be relaxed in future versions of the protocol to allow
     other URI schemes.
     """
-    name: str | None = None
+    name: Union[str, None] = None
     """
     An optional name for the root. This can be used to provide a human-readable
     identifier for the root, which may be useful for display purposes or for
@@ -983,7 +986,7 @@ class ListRootsResult(Result):
     or file that the server can operate on.
     """
 
-    roots: list[Root]
+    roots: List[Root]
 
 
 class RootsListChangedNotification(Notification):
@@ -997,7 +1000,7 @@ class RootsListChangedNotification(Notification):
     """
 
     method: Literal["notifications/roots/list_changed"]
-    params: NotificationParams | None = None
+    params: Union[NotificationParams, None] = None
 
 
 class CancelledNotificationParams(NotificationParams):
@@ -1005,7 +1008,7 @@ class CancelledNotificationParams(NotificationParams):
 
     requestId: RequestId
     """The ID of the request to cancel."""
-    reason: str | None = None
+    reason: Union[str, None] = None
     """An optional string describing the reason for the cancellation."""
     model_config = ConfigDict(extra="allow")
 
@@ -1022,19 +1025,21 @@ class CancelledNotification(Notification):
 
 class ClientRequest(
     RootModel[
-        PingRequest
-        | InitializeRequest
-        | CompleteRequest
-        | SetLevelRequest
-        | GetPromptRequest
-        | ListPromptsRequest
-        | ListResourcesRequest
-        | ListResourceTemplatesRequest
-        | ReadResourceRequest
-        | SubscribeRequest
-        | UnsubscribeRequest
-        | CallToolRequest
-        | ListToolsRequest
+        Union[
+            PingRequest,
+            InitializeRequest,
+            CompleteRequest,
+            SetLevelRequest,
+            GetPromptRequest,
+            ListPromptsRequest,
+            ListResourcesRequest,
+            ListResourceTemplatesRequest,
+            ReadResourceRequest,
+            SubscribeRequest,
+            UnsubscribeRequest,
+            CallToolRequest,
+            ListToolsRequest
+        ]
     ]
 ):
     pass
@@ -1042,32 +1047,36 @@ class ClientRequest(
 
 class ClientNotification(
     RootModel[
-        CancelledNotification
-        | ProgressNotification
-        | InitializedNotification
-        | RootsListChangedNotification
+        Union[
+            CancelledNotification,
+            ProgressNotification,
+            InitializedNotification,
+            RootsListChangedNotification
+        ]
     ]
 ):
     pass
 
 
-class ClientResult(RootModel[EmptyResult | CreateMessageResult | ListRootsResult]):
+class ClientResult(RootModel[Union[EmptyResult, CreateMessageResult, ListRootsResult]]):
     pass
 
 
-class ServerRequest(RootModel[PingRequest | CreateMessageRequest | ListRootsRequest]):
+class ServerRequest(RootModel[Union[PingRequest, CreateMessageRequest, ListRootsRequest]]):
     pass
 
 
 class ServerNotification(
     RootModel[
-        CancelledNotification
-        | ProgressNotification
-        | LoggingMessageNotification
-        | ResourceUpdatedNotification
-        | ResourceListChangedNotification
-        | ToolListChangedNotification
-        | PromptListChangedNotification
+        Union[
+            CancelledNotification,
+            ProgressNotification,
+            LoggingMessageNotification,
+            ResourceUpdatedNotification,
+            ResourceListChangedNotification,
+            ToolListChangedNotification,
+            PromptListChangedNotification
+        ]
     ]
 ):
     pass
@@ -1075,16 +1084,18 @@ class ServerNotification(
 
 class ServerResult(
     RootModel[
-        EmptyResult
-        | InitializeResult
-        | CompleteResult
-        | GetPromptResult
-        | ListPromptsResult
-        | ListResourcesResult
-        | ListResourceTemplatesResult
-        | ReadResourceResult
-        | CallToolResult
-        | ListToolsResult
+        Union[
+            EmptyResult,
+            InitializeResult,
+            CompleteResult,
+            GetPromptResult,
+            ListPromptsResult,
+            ListResourcesResult,
+            ListResourceTemplatesResult,
+            ReadResourceResult,
+            CallToolResult,
+            ListToolsResult
+        ]
     ]
 ):
     pass

@@ -4,7 +4,7 @@ Thank you for your interest in contributing to the MCP Python SDK! This document
 
 ## Development Setup
 
-1. Make sure you have Python 3.10+ installed
+1. Make sure you have Python 3.9+ installed
 2. Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
 3. Fork the repository
 4. Clone your fork: `git clone https://github.com/YOUR-USERNAME/python-sdk.git`

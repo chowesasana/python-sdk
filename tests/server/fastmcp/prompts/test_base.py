@@ -9,6 +9,7 @@ from mcp.server.fastmcp.prompts.base import (
     UserMessage,
 )
 from mcp.types import EmbeddedResource, TextResourceContents
+from typing import Dict, List, Optional, Tuple, Union
 
 
 class TestRenderPrompt:
@@ -85,7 +86,7 @@ class TestRenderPrompt:
             UserMessage("I'm looking for a restaurant in the center of town."),
         ]
 
-        async def fn() -> list[Message]:
+        async def fn() -> List[Message]:
             return expected
 
         prompt = Prompt.from_function(fn)
@@ -98,7 +99,7 @@ class TestRenderPrompt:
             "I'm looking for a restaurant in the center of town.",
         ]
 
-        async def fn() -> list[str]:
+        async def fn() -> List[str]:
             return expected
 
         prompt = Prompt.from_function(fn)
@@ -138,7 +139,7 @@ class TestRenderPrompt:
     async def test_fn_returns_mixed_content(self):
         """Test returning messages with mixed content types."""
 
-        async def fn() -> list[Message]:
+        async def fn() -> List[Message]:
             return [
                 UserMessage(content="Please analyze this file:"),
                 UserMessage(

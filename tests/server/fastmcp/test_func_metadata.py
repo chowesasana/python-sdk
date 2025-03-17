@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, List, Union
 
 import annotated_types
 import pytest
@@ -24,10 +24,10 @@ def complex_arguments_fn(
     an_int: int,
     must_be_none: None,
     must_be_none_dumb_annotation: Annotated[None, "blah"],
-    list_of_ints: list[int],
-    # list[str] | str is an interesting case because if it comes in as JSON like
+    list_of_ints: List[int],
+    # Union[List[str], str] is an interesting case because if it comes in as JSON like
     # "[\"a\", \"b\"]" then it will be naively parsed as a string.
-    list_str_or_str: list[str] | str,
+    list_str_or_str: Union[List[str], str],
     an_int_annotated_with_field: Annotated[
         int, Field(description="An int with a field")
     ],
@@ -150,13 +150,13 @@ async def test_complex_function_runtime_arg_validation_with_json():
 
 
 def test_str_vs_list_str():
-    """Test handling of string vs list[str] type annotations.
+    """Test handling of string vs List[str] type annotations.
 
     This is tricky as '"hello"' can be parsed as a JSON string or a Python string.
     We want to make sure it's kept as a python string.
     """
 
-    def func_with_str_types(str_or_list: str | list[str]):
+    def func_with_str_types(str_or_list: Union[str, List[str]]):
         return str_or_list
 
     meta = func_metadata(func_with_str_types)

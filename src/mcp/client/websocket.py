@@ -1,7 +1,7 @@
 import json
 import logging
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Union
 
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
@@ -19,7 +19,7 @@ async def websocket_client(
     url: str,
 ) -> AsyncGenerator[
     tuple[
-        MemoryObjectReceiveStream[types.JSONRPCMessage | Exception],
+        MemoryObjectReceiveStream[Union[types.JSONRPCMessage, Exception]],
         MemoryObjectSendStream[types.JSONRPCMessage],
     ],
     None,
@@ -39,8 +39,8 @@ async def websocket_client(
     # Create two in-memory streams:
     # - One for incoming messages (read_stream, written by ws_reader)
     # - One for outgoing messages (write_stream, read by ws_writer)
-    read_stream: MemoryObjectReceiveStream[types.JSONRPCMessage | Exception]
-    read_stream_writer: MemoryObjectSendStream[types.JSONRPCMessage | Exception]
+    read_stream: MemoryObjectReceiveStream[Union[types.JSONRPCMessage, Exception]]
+    read_stream_writer: MemoryObjectSendStream[Union[types.JSONRPCMessage, Exception]]
     write_stream: MemoryObjectSendStream[types.JSONRPCMessage]
     write_stream_reader: MemoryObjectReceiveStream[types.JSONRPCMessage]
 

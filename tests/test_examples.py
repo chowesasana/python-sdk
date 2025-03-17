@@ -7,6 +7,7 @@ from mcp.shared.memory import (
     create_connected_server_and_client_session as client_session,
 )
 from mcp.types import TextContent, TextResourceContents
+from typing import Dict, List, Optional, Tuple, Union
 
 
 @pytest.mark.anyio
@@ -75,7 +76,7 @@ async def test_desktop(monkeypatch):
 
 @pytest.mark.parametrize("example", find_examples("README.md"), ids=str)
 def test_docs_examples(example: CodeExample, eval_example: EvalExample):
-    ruff_ignore: list[str] = ["F841", "I001"]
+    ruff_ignore: List[str] = ["F841", "I001"]
 
     eval_example.set_config(
         ruff_ignore=ruff_ignore, target_version="py310", line_length=88

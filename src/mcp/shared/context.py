@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any, Generic, Union
 
 from typing_extensions import TypeVar
 
@@ -13,6 +13,6 @@ LifespanContextT = TypeVar("LifespanContextT", default=None)
 @dataclass
 class RequestContext(Generic[SessionT, LifespanContextT]):
     request_id: RequestId
-    meta: RequestParams.Meta | None
+    meta: Union[RequestParams.Meta, None]
     session: SessionT
     lifespan_context: LifespanContextT

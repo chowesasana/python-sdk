@@ -1,6 +1,6 @@
 """Resource manager functionality."""
 
-from typing import Callable
+from typing import Callable, Union, Dict, List
 
 from pydantic import AnyUrl
 
@@ -15,8 +15,8 @@ class ResourceManager:
     """Manages FastMCP resources."""
 
     def __init__(self, warn_on_duplicate_resources: bool = True):
-        self._resources: dict[str, Resource] = {}
-        self._templates: dict[str, ResourceTemplate] = {}
+        self._resources: Dict[str, Resource] = {}
+        self._templates: Dict[str, ResourceTemplate] = {}
         self.warn_on_duplicate_resources = warn_on_duplicate_resources
 
     def add_resource(self, resource: Resource) -> Resource:
@@ -49,9 +49,9 @@ class ResourceManager:
         self,
         fn: Callable,
         uri_template: str,
-        name: str | None = None,
-        description: str | None = None,
-        mime_type: str | None = None,
+        name: Union[str, None] = None,
+        description: Union[str, None] = None,
+        mime_type: Union[str, None] = None,
     ) -> ResourceTemplate:
         """Add a template from a function."""
         template = ResourceTemplate.from_function(
@@ -64,7 +64,7 @@ class ResourceManager:
         self._templates[template.uri_template] = template
         return template
 
-    async def get_resource(self, uri: AnyUrl | str) -> Resource | None:
+    async def get_resource(self, uri: Union[AnyUrl, str]) -> Union[Resource, None]:
         """Get resource by URI, checking concrete resources first, then templates."""
         uri_str = str(uri)
         logger.debug("Getting resource", extra={"uri": uri_str})
@@ -83,12 +83,12 @@ class ResourceManager:
 
         raise ValueError(f"Unknown resource: {uri}")
 
-    def list_resources(self) -> list[Resource]:
+    def list_resources(self) -> List[Resource]:
         """List all registered resources."""
         logger.debug("Listing resources", extra={"count": len(self._resources)})
         return list(self._resources.values())
 
-    def list_templates(self) -> list[ResourceTemplate]:
+    def list_templates(self) -> List[ResourceTemplate]:
         """List all registered templates."""
         logger.debug("Listing templates", extra={"count": len(self._templates)})
         return list(self._templates.values())

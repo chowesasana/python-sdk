@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Union
 
 import anyio
 import pytest
@@ -36,7 +36,7 @@ async def test_notification_validation_error(tmp_path: Path):
     @server.call_tool()
     async def slow_tool(
         name: str, arg
-    ) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
+    ) -> Sequence[Union[TextContent, ImageContent, EmbeddedResource]]:
         nonlocal request_count
         request_count += 1
 
