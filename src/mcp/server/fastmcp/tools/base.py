@@ -1,7 +1,7 @@
 from __future__ import annotations as _annotations
 
 import inspect
-from typing import TYPE_CHECKING, Any, Callable, Dict, Union
+from typing import TYPE_CHECKING, Any, Callable, Union
 
 from pydantic import BaseModel, Field
 
@@ -21,7 +21,7 @@ class Tool(BaseModel):
     fn: Callable[..., Any] = Field(exclude=True)
     name: str = Field(description="Name of the tool")
     description: str = Field(description="Description of what the tool does")
-    parameters: Dict[str, Any] = Field(description="JSON schema for tool parameters")
+    parameters: dict[str, Any] = Field(description="JSON schema for tool parameters")
     fn_metadata: FuncMetadata = Field(
         description="Metadata about the function including a pydantic model for tool"
         " arguments"
@@ -74,7 +74,7 @@ class Tool(BaseModel):
 
     async def run(
         self,
-        arguments: Dict[str, Any],
+        arguments: dict[str, Any],
         context: Union[Context[ServerSessionT, LifespanContextT], None] = None,
     ) -> Any:
         """Run the tool with arguments."""

@@ -1,6 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 from urllib.parse import urljoin, urlparse
 
 import anyio
@@ -21,7 +21,7 @@ def remove_request_params(url: str) -> str:
 @asynccontextmanager
 async def sse_client(
     url: str,
-    headers: Optional[Dict[str, Any]] = None,
+    headers: Optional[dict[str, Any]] = None,
     timeout: float = 5,
     sse_read_timeout: float = 60 * 5,
 ):
@@ -70,8 +70,7 @@ async def sse_client(
                                     endpoint_parsed = urlparse(endpoint_url)
                                     if (
                                         url_parsed.netloc != endpoint_parsed.netloc
-                                        or url_parsed.scheme
-                                        != endpoint_parsed.scheme
+                                        or url_parsed.scheme != endpoint_parsed.scheme
                                     ):
                                         error_msg = (
                                             "Endpoint origin does not match "
@@ -84,8 +83,10 @@ async def sse_client(
 
                                 elif event_type == "message":
                                     try:
-                                        message = types.JSONRPCMessage.model_validate_json(  # noqa: E501
-                                            sse.data
+                                        message = (
+                                            types.JSONRPCMessage.model_validate_json(  # noqa: E501
+                                                sse.data
+                                            )
                                         )
                                         logger.debug(
                                             f"Received server message: {message}"
@@ -99,9 +100,7 @@ async def sse_client(
 
                                     await read_stream_writer.send(message)
                                 else:
-                                    logger.warning(
-                                        f"Unknown SSE event: {sse.event}"
-                                    )
+                                    logger.warning(f"Unknown SSE event: {sse.event}")
                         except Exception as exc:
                             logger.error(f"Error in sse_reader: {exc}")
                             await read_stream_writer.send(exc)

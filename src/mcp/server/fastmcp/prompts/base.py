@@ -3,7 +3,7 @@
 import inspect
 import json
 from collections.abc import Callable
-from typing import Any, Awaitable, Literal, Sequence, Union, Dict, List
+from typing import Any, Awaitable, Literal, Sequence, Union
 
 import pydantic_core
 from pydantic import BaseModel, Field, TypeAdapter, validate_call
@@ -45,9 +45,9 @@ class AssistantMessage(Message):
 
 message_validator = TypeAdapter(Union[UserMessage, AssistantMessage])
 
-SyncPromptResult = (
-    Union[str, Message, Dict[str, Any], Sequence[Union[str, Message, Dict[str, Any]]]]
-)
+SyncPromptResult = Union[
+    str, Message, dict[str, Any], Sequence[Union[str, Message, dict[str, Any]]]
+]
 PromptResult = Union[SyncPromptResult, Awaitable[SyncPromptResult]]
 
 
@@ -70,7 +70,7 @@ class Prompt(BaseModel):
     description: Union[str, None] = Field(
         None, description="Description of what the prompt does"
     )
-    arguments: Union[List[PromptArgument], None] = Field(
+    arguments: Union[list[PromptArgument], None] = Field(
         None, description="Arguments that can be passed to the prompt"
     )
     fn: Callable = Field(exclude=True)
@@ -121,7 +121,9 @@ class Prompt(BaseModel):
             fn=fn,
         )
 
-    async def render(self, arguments: Union[Dict[str, Any], None] = None) -> List[Message]:
+    async def render(
+        self, arguments: Union[dict[str, Any], None] = None
+    ) -> list[Message]:
         """Render the prompt with arguments."""
         # Validate required arguments
         if self.arguments:

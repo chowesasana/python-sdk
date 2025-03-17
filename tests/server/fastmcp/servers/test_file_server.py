@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 
 from mcp.server.fastmcp import FastMCP
-from typing import Dict, List, Optional, Tuple, Union
 
 
 @pytest.fixture()
@@ -30,7 +29,7 @@ def mcp() -> FastMCP:
 @pytest.fixture(autouse=True)
 def resources(mcp: FastMCP, test_dir: Path) -> FastMCP:
     @mcp.resource("dir://test_dir")
-    def list_test_dir() -> List[str]:
+    def list_test_dir() -> list[str]:
         """List the files in the test directory"""
         return [str(f) for f in test_dir.iterdir()]
 

@@ -1,7 +1,7 @@
 from __future__ import annotations as _annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Union, Dict, List
+from typing import TYPE_CHECKING, Any, Union
 
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.server.fastmcp.tools.base import Tool
@@ -19,14 +19,14 @@ class ToolManager:
     """Manages FastMCP tools."""
 
     def __init__(self, warn_on_duplicate_tools: bool = True):
-        self._tools: Dict[str, Tool] = {}
+        self._tools: dict[str, Tool] = {}
         self.warn_on_duplicate_tools = warn_on_duplicate_tools
 
     def get_tool(self, name: str) -> Union[Tool, None]:
         """Get tool by name."""
         return self._tools.get(name)
 
-    def list_tools(self) -> List[Tool]:
+    def list_tools(self) -> list[Tool]:
         """List all registered tools."""
         return list(self._tools.values())
 
@@ -49,7 +49,7 @@ class ToolManager:
     async def call_tool(
         self,
         name: str,
-        arguments: Dict[str, Any],
+        arguments: dict[str, Any],
         context: Union[Context[ServerSessionT, LifespanContextT], None] = None,
     ) -> Any:
         """Call a tool by name with arguments."""

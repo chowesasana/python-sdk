@@ -4,7 +4,7 @@ import inspect
 import json
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Union, List
+from typing import Any, Union
 
 import anyio
 import anyio.to_thread
@@ -153,7 +153,7 @@ class DirectoryResource(Resource):
             raise ValueError("Path must be absolute")
         return path
 
-    def list_files(self) -> List[Path]:
+    def list_files(self) -> list[Path]:
         """List files in the directory."""
         if not self.path.exists():
             raise FileNotFoundError(f"Directory not found: {self.path}")

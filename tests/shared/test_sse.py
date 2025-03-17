@@ -1,7 +1,7 @@
 import multiprocessing
 import socket
 import time
-from typing import AsyncGenerator, Generator, List, Union
+from typing import AsyncGenerator, Generator, Union
 
 import anyio
 import httpx
@@ -63,7 +63,7 @@ class ServerTest(Server):
             )
 
         @self.list_tools()
-        async def handle_list_tools() -> List[Tool]:
+        async def handle_list_tools() -> list[Tool]:
             return [
                 Tool(
                     name="test_tool",
@@ -73,7 +73,7 @@ class ServerTest(Server):
             ]
 
         @self.call_tool()
-        async def handle_call_tool(name: str, args: dict) -> List[TextContent]:
+        async def handle_call_tool(name: str, args: dict) -> list[TextContent]:
             return [TextContent(type="text", text=f"Called {name}")]
 
 

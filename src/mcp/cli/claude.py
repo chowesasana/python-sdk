@@ -4,7 +4,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 from mcp.server.fastmcp.utilities.logging import get_logger
 
@@ -36,8 +36,8 @@ def update_claude_config(
     server_name: str,
     *,
     with_editable: Union[Path, None] = None,
-    with_packages: Union[List[str], None] = None,
-    env_vars: Union[Dict[str, str], None] = None,
+    with_packages: Union[list[str], None] = None,
+    env_vars: Union[dict[str, str], None] = None,
 ) -> bool:
     """Add or update a FastMCP server in Claude's configuration.
 

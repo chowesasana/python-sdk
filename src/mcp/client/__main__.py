@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 from functools import partial
+from typing import Union
 from urllib.parse import urlparse
 
 import anyio
@@ -11,7 +12,6 @@ from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.types import JSONRPCMessage
-from typing import Dict, List, Optional, Tuple, Union
 
 if not sys.warnoptions:
     import warnings
@@ -47,7 +47,7 @@ async def run_session(
         logger.info("Initialized")
 
 
-async def main(command_or_url: str, args: List[str], env: List[Tuple[str, str]]):
+async def main(command_or_url: str, args: list[str], env: list[tuple[str, str]]):
     env_dict = dict(env)
 
     if urlparse(command_or_url).scheme in ("http", "https"):

@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Protocol, Union, Dict
+from typing import Any, Protocol, Union
 
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from pydantic import AnyUrl, TypeAdapter
@@ -218,7 +218,7 @@ class ClientSession(
         )
 
     async def call_tool(
-        self, name: str, arguments: Union[Dict[str, Any], None] = None
+        self, name: str, arguments: Union[dict[str, Any], None] = None
     ) -> types.CallToolResult:
         """Send a tools/call request."""
         return await self.send_request(
@@ -243,7 +243,7 @@ class ClientSession(
         )
 
     async def get_prompt(
-        self, name: str, arguments: Union[Dict[str, str], None] = None
+        self, name: str, arguments: Union[dict[str, str], None] = None
     ) -> types.GetPromptResult:
         """Send a prompts/get request."""
         return await self.send_request(
@@ -259,7 +259,7 @@ class ClientSession(
     async def complete(
         self,
         ref: Union[types.ResourceReference, types.PromptReference],
-        argument: Dict[str, str],
+        argument: dict[str, str],
     ) -> types.CompleteResult:
         """Send a completion/complete request."""
         return await self.send_request(

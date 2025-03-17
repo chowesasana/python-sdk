@@ -1,12 +1,12 @@
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from typing import Union
 
 from pydantic import BaseModel
 
 from mcp.shared.context import RequestContext
 from mcp.shared.session import BaseSession
 from mcp.types import ProgressToken
-from typing import Dict, List, Optional, Tuple, Union
 
 
 class Progress(BaseModel):

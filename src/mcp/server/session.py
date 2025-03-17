@@ -10,7 +10,7 @@ Common usage pattern:
     server = Server(name)
 
     @server.call_tool()
-    async def handle_tool_call(ctx: RequestContext, arguments: Dict[str, Any]) -> Any:
+    async def handle_tool_call(ctx: RequestContext, arguments: dict[str, Any]) -> Any:
         # Check client capabilities before proceeding
         if ctx.session.check_client_capability(
             types.ClientCapabilities(experimental={"advanced_tools": dict()})
@@ -24,7 +24,7 @@ Common usage pattern:
         return result
 
     @server.list_prompts()
-    async def handle_list_prompts(ctx: RequestContext) -> List[types.Prompt]:
+    async def handle_list_prompts(ctx: RequestContext) -> list[types.Prompt]:
         # Access session for any necessary checks or operations
         if ctx.session.client_params:
             # Customize prompts based on client initialization parameters
@@ -38,7 +38,7 @@ be instantiated directly by users of the MCP framework.
 """
 
 from enum import Enum
-from typing import Any, TypeVar, Union, Dict, List
+from typing import Any, TypeVar, Union
 
 import anyio
 import anyio.lowlevel
@@ -133,17 +133,17 @@ class ServerSession(
             with responder:
                 await responder.respond(
                     types.ServerResult(
-                            types.InitializeResult(
-                                protocolVersion=types.LATEST_PROTOCOL_VERSION,
-                                capabilities=self._init_options.capabilities,
-                                serverInfo=types.Implementation(
-                                    name=self._init_options.server_name,
-                                    version=self._init_options.server_version,
-                                ),
-                                instructions=self._init_options.instructions,
-                            )
+                        types.InitializeResult(
+                            protocolVersion=types.LATEST_PROTOCOL_VERSION,
+                            capabilities=self._init_options.capabilities,
+                            serverInfo=types.Implementation(
+                                name=self._init_options.server_name,
+                                version=self._init_options.server_version,
+                            ),
+                            instructions=self._init_options.instructions,
                         )
                     )
+                )
         else:
             if self._initialization_state != InitializationState.Initialized:
                 raise RuntimeError(
@@ -193,14 +193,14 @@ class ServerSession(
 
     async def create_message(
         self,
-        messages: List[types.SamplingMessage],
+        messages: list[types.SamplingMessage],
         *,
         max_tokens: int,
         system_prompt: Union[str, None] = None,
         include_context: Union[types.IncludeContext, None] = None,
         temperature: Union[float, None] = None,
-        stop_sequences: Union[List[str], None] = None,
-        metadata: Union[Dict[str, Any], None] = None,
+        stop_sequences: Union[list[str], None] = None,
+        metadata: Union[dict[str, Any], None] = None,
         model_preferences: Union[types.ModelPreferences, None] = None,
     ) -> types.CreateMessageResult:
         """Send a sampling/create_message request."""
@@ -246,7 +246,10 @@ class ServerSession(
         )
 
     async def send_progress_notification(
-        self, progress_token: Union[str, int], progress: float, total: Union[float, None] = None
+        self,
+        progress_token: Union[str, int],
+        progress: float,
+        total: Union[float, None] = None,
     ) -> None:
         """Send a progress notification."""
         await self.send_notification(

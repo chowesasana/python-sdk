@@ -1,7 +1,7 @@
 import logging
 from contextlib import AsyncExitStack
 from datetime import timedelta
-from typing import Any, Callable, Generic, TypeVar, Dict
+from typing import Any, Callable, Generic, TypeVar
 
 import anyio
 import anyio.lowlevel
@@ -38,6 +38,7 @@ ReceiveNotificationT = TypeVar(
 )
 
 from typing import Union
+
 RequestId = Union[str, int]
 
 
@@ -162,7 +163,7 @@ class BaseSession(
         RequestId, MemoryObjectSendStream[Union[JSONRPCResponse, JSONRPCError]]
     ]
     _request_id: int
-    _in_flight: Dict[RequestId, RequestResponder[ReceiveRequestT, SendResultT]]
+    _in_flight: dict[RequestId, RequestResponder[ReceiveRequestT, SendResultT]]
 
     def __init__(
         self,
@@ -188,7 +189,7 @@ class BaseSession(
                 Union[
                     RequestResponder[ReceiveRequestT, SendResultT],
                     ReceiveNotificationT,
-                    Exception
+                    Exception,
                 ]
             ]()
         )
@@ -383,7 +384,10 @@ class BaseSession(
         """
 
     async def send_progress_notification(
-        self, progress_token: Union[str, int], progress: float, total: Union[float, None] = None
+        self,
+        progress_token: Union[str, int],
+        progress: float,
+        total: Union[float, None] = None,
     ) -> None:
         """
         Sends a progress notification for a request that is currently being
@@ -397,7 +401,7 @@ class BaseSession(
         Union[
             RequestResponder[ReceiveRequestT, SendResultT],
             ReceiveNotificationT,
-            Exception
+            Exception,
         ]
     ]:
         return self._incoming_message_stream_reader

@@ -1,6 +1,6 @@
 """Resource manager functionality."""
 
-from typing import Callable, Union, Dict, List
+from typing import Callable, Union
 
 from pydantic import AnyUrl
 
@@ -15,8 +15,8 @@ class ResourceManager:
     """Manages FastMCP resources."""
 
     def __init__(self, warn_on_duplicate_resources: bool = True):
-        self._resources: Dict[str, Resource] = {}
-        self._templates: Dict[str, ResourceTemplate] = {}
+        self._resources: dict[str, Resource] = {}
+        self._templates: dict[str, ResourceTemplate] = {}
         self.warn_on_duplicate_resources = warn_on_duplicate_resources
 
     def add_resource(self, resource: Resource) -> Resource:
@@ -83,12 +83,12 @@ class ResourceManager:
 
         raise ValueError(f"Unknown resource: {uri}")
 
-    def list_resources(self) -> List[Resource]:
+    def list_resources(self) -> list[Resource]:
         """List all registered resources."""
         logger.debug("Listing resources", extra={"count": len(self._resources)})
         return list(self._resources.values())
 
-    def list_templates(self) -> List[ResourceTemplate]:
+    def list_templates(self) -> list[ResourceTemplate]:
         """List all registered templates."""
         logger.debug("Listing templates", extra={"count": len(self._templates)})
         return list(self._templates.values())

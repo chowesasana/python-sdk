@@ -11,27 +11,27 @@ Usage:
 
 2. Define request handlers using decorators:
    @server.list_prompts()
-   async def handle_list_prompts() -> List[types.Prompt]:
+   async def handle_list_prompts() -> list[types.Prompt]:
        # Implementation
 
    @server.get_prompt()
    async def handle_get_prompt(
-       name: str, arguments: Union[Dict[str, str], None]
+       name: str, arguments: Union[dict[str, str], None]
    ) -> types.GetPromptResult:
        # Implementation
 
    @server.list_tools()
-   async def handle_list_tools() -> List[types.Tool]:
+   async def handle_list_tools() -> list[types.Tool]:
        # Implementation
 
    @server.call_tool()
    async def handle_call_tool(
        name: str, arguments: Union[dict, None]
-   ) -> List[types.Union[TextContent, types].Union[ImageContent, types].EmbeddedResource]:
+   ) -> list[types.Union[TextContent, types].Union[ImageContent, types].EmbeddedResource]:
        # Implementation
 
    @server.list_resource_templates()
-   async def handle_list_resource_templates() -> List[types.ResourceTemplate]:
+   async def handle_list_resource_templates() -> list[types.ResourceTemplate]:
        # Implementation
 
 3. Define notification handlers if needed:
@@ -71,7 +71,7 @@ import logging
 import warnings
 from collections.abc import Awaitable, Callable, Iterable
 from contextlib import AbstractAsyncContextManager, AsyncExitStack, asynccontextmanager
-from typing import Any, AsyncIterator, Generic, TypeVar, Union, Dict, List
+from typing import Any, AsyncIterator, Generic, TypeVar, Union
 
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
@@ -140,14 +140,14 @@ class Server(Generic[LifespanResultT]):
         ] = {
             types.PingRequest: _ping_handler,
         }
-        self.notification_handlers: Dict[type, Callable[..., Awaitable[None]]] = {}
+        self.notification_handlers: dict[type, Callable[..., Awaitable[None]]] = {}
         self.notification_options = NotificationOptions()
         logger.debug(f"Initializing server '{name}'")
 
     def create_initialization_options(
         self,
         notification_options: Union[NotificationOptions, None] = None,
-        experimental_capabilities: Dict[str, dict[str, Any]] | None = None,
+        experimental_capabilities: dict[str, dict[str, Any]] | None = None,
     ) -> InitializationOptions:
         """Create initialization options from this server instance."""
 
@@ -176,7 +176,7 @@ class Server(Generic[LifespanResultT]):
     def get_capabilities(
         self,
         notification_options: NotificationOptions,
-        experimental_capabilities: Dict[str, dict[str, Any]],
+        experimental_capabilities: dict[str, dict[str, Any]],
     ) -> types.ServerCapabilities:
         """Convert existing handlers to a ServerCapabilities object."""
         prompts_capability = None
@@ -220,7 +220,7 @@ class Server(Generic[LifespanResultT]):
         return request_ctx.get()
 
     def list_prompts(self):
-        def decorator(func: Callable[[], Awaitable[List[types.Prompt]]]):
+        def decorator(func: Callable[[], Awaitable[list[types.Prompt]]]):
             logger.debug("Registering handler for PromptListRequest")
 
             async def handler(_: Any):
@@ -234,8 +234,8 @@ class Server(Generic[LifespanResultT]):
 
     def get_prompt(self):
         def decorator(
-            func: Union[Callable[
-                [str, Dict[str, str], None]], Awaitable[types.GetPromptResult]
+            func: Union[
+                Callable[[str, dict[str, str], None]], Awaitable[types.GetPromptResult]
             ],
         ):
             logger.debug("Registering handler for GetPromptRequest")
@@ -250,7 +250,7 @@ class Server(Generic[LifespanResultT]):
         return decorator
 
     def list_resources(self):
-        def decorator(func: Callable[[], Awaitable[List[types.Resource]]]):
+        def decorator(func: Callable[[], Awaitable[list[types.Resource]]]):
             logger.debug("Registering handler for ListResourcesRequest")
 
             async def handler(_: Any):
@@ -265,7 +265,7 @@ class Server(Generic[LifespanResultT]):
         return decorator
 
     def list_resource_templates(self):
-        def decorator(func: Callable[[], Awaitable[List[types.ResourceTemplate]]]):
+        def decorator(func: Callable[[], Awaitable[list[types.ResourceTemplate]]]):
             logger.debug("Registering handler for ListResourceTemplatesRequest")
 
             async def handler(_: Any):
@@ -290,7 +290,9 @@ class Server(Generic[LifespanResultT]):
             async def handler(req: types.ReadResourceRequest):
                 result = await func(req.params.uri)
 
-                def create_content(data: Union[str, bytes], mime_type: Union[str, None]):
+                def create_content(
+                    data: Union[str, bytes], mime_type: Union[str, None]
+                ):
                     if isinstance(data, str):
                         return types.TextResourceContents(
                             uri=req.params.uri,
@@ -384,7 +386,7 @@ class Server(Generic[LifespanResultT]):
         return decorator
 
     def list_tools(self):
-        def decorator(func: Callable[[], Awaitable[List[types.Tool]]]):
+        def decorator(func: Callable[[], Awaitable[list[types.Tool]]]):
             logger.debug("Registering handler for ListToolsRequest")
 
             async def handler(_: Any):
@@ -402,7 +404,9 @@ class Server(Generic[LifespanResultT]):
                 ...,
                 Awaitable[
                     Iterable[
-                        types.Union[TextContent, types].Union[ImageContent, types].EmbeddedResource
+                        types.Union[TextContent, types]
+                        .Union[ImageContent, types]
+                        .EmbeddedResource
                     ]
                 ],
             ],
@@ -430,7 +434,9 @@ class Server(Generic[LifespanResultT]):
 
     def progress_notification(self):
         def decorator(
-            func: Callable[[Union[str, int], float, Union[float, None]], Awaitable[None]],
+            func: Callable[
+                [Union[str, int], float, Union[float, None]], Awaitable[None]
+            ],
         ):
             logger.debug("Registering handler for ProgressNotification")
 
@@ -450,10 +456,10 @@ class Server(Generic[LifespanResultT]):
         def decorator(
             func: Callable[
                 [
-                    types.Union[PromptReference, types].ResourceReference,
+                    Union[types.PromptReference, types.ResourceReference,
                     types.CompletionArgument,
                 ],
-                Awaitable[types.Union[Completion, None]],
+                Awaitable[Union[types.Completion, None]],
             ],
         ):
             logger.debug("Registering handler for CompleteRequest")
@@ -507,16 +513,18 @@ class Server(Generic[LifespanResultT]):
         message: Union[
             RequestResponder[types.ClientRequest, types.ServerResult],
             types.ClientNotification,
-            Exception
+            Exception,
         ],
         session: ServerSession,
         lifespan_context: LifespanResultT,
         raise_exceptions: bool = False,
     ):
         with warnings.catch_warnings(record=True) as w:
-            if (isinstance(message, RequestResponder) and 
-                hasattr(message, 'request') and 
-                isinstance(message.request, types.ClientRequest)):
+            if (
+                isinstance(message, RequestResponder)
+                and hasattr(message, "request")
+                and isinstance(message.request, types.ClientRequest)
+            ):
                 responder = message
                 req = message.request.root
                 with responder:

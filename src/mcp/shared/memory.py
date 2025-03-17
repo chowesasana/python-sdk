@@ -4,7 +4,7 @@ In-memory transports
 
 from contextlib import asynccontextmanager
 from datetime import timedelta
-from typing import AsyncGenerator, Tuple, Union
+from typing import AsyncGenerator, Union
 
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
@@ -13,7 +13,7 @@ from mcp.client.session import ClientSession, ListRootsFnT, SamplingFnT
 from mcp.server import Server
 from mcp.types import JSONRPCMessage
 
-MessageStream = Tuple[
+MessageStream = tuple[
     MemoryObjectReceiveStream[Union[JSONRPCMessage, Exception]],
     MemoryObjectSendStream[JSONRPCMessage],
 ]
@@ -21,7 +21,7 @@ MessageStream = Tuple[
 
 @asynccontextmanager
 async def create_client_server_memory_streams() -> (
-    AsyncGenerator[Tuple[MessageStream, MessageStream], None]
+    AsyncGenerator[tuple[MessageStream, MessageStream], None]
 ):
     """
     Creates a pair of bidirectional memory streams for client-server communication.

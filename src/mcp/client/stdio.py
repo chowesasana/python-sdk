@@ -1,7 +1,7 @@
 import os
 import sys
 from contextlib import asynccontextmanager
-from typing import Literal, Union, Dict, List
+from typing import Literal, Union
 
 import anyio
 import anyio.lowlevel
@@ -31,12 +31,12 @@ DEFAULT_INHERITED_ENV_VARS = (
 )
 
 
-def get_default_environment() -> Dict[str, str]:
+def get_default_environment() -> dict[str, str]:
     """
     Returns a default environment object including only environment variables deemed
     safe to inherit.
     """
-    env: Dict[str, str] = {}
+    env: dict[str, str] = {}
 
     for key in DEFAULT_INHERITED_ENV_VARS:
         value = os.environ.get(key)
@@ -56,10 +56,10 @@ class StdioServerParameters(BaseModel):
     command: str
     """The executable to run to start the server."""
 
-    args: List[str] = Field(default_factory=list)
+    args: list[str] = Field(default_factory=list)
     """Command line arguments to pass to the executable."""
 
-    env: Union[Dict[str, str], None] = None
+    env: Union[dict[str, str], None] = None
     """
     The environment to use when spawning the process.
 

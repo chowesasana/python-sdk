@@ -2,7 +2,7 @@
 
 import inspect
 import re
-from typing import Any, Callable, Union, Dict
+from typing import Any, Callable, Union
 
 from pydantic import BaseModel, Field, TypeAdapter, validate_call
 
@@ -16,7 +16,9 @@ class ResourceTemplate(BaseModel):
         description="URI template with parameters (e.g. weather://{city}/current)"
     )
     name: str = Field(description="Name of the resource")
-    description: Union[str, None] = Field(description="Description of what the resource does")
+    description: Union[str, None] = Field(
+        description="Description of what the resource does"
+    )
     mime_type: str = Field(
         default="text/plain", description="MIME type of the resource content"
     )
@@ -52,7 +54,7 @@ class ResourceTemplate(BaseModel):
             parameters=parameters,
         )
 
-    def matches(self, uri: str) -> Union[Dict[str, Any], None]:
+    def matches(self, uri: str) -> Union[dict[str, Any], None]:
         """Check if URI matches template and extract parameters."""
         # Convert template to regex pattern
         pattern = self.uri_template.replace("{", "(?P<").replace("}", ">[^/]+)")
@@ -61,7 +63,7 @@ class ResourceTemplate(BaseModel):
             return match.groupdict()
         return None
 
-    async def create_resource(self, uri: str, params: Dict[str, Any]) -> Resource:
+    async def create_resource(self, uri: str, params: dict[str, Any]) -> Resource:
         """Create a resource from the template with the given parameters."""
         try:
             # Call function and check if result is a coroutine

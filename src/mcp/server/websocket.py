@@ -1,3 +1,4 @@
+from typing import Union
 import logging
 from contextlib import asynccontextmanager
 
@@ -8,7 +9,6 @@ from starlette.types import Receive, Scope, Send
 from starlette.websockets import WebSocket
 
 import mcp.types as types
-from typing import Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +23,8 @@ async def websocket_server(scope: Scope, receive: Receive, send: Send):
     websocket = WebSocket(scope, receive, send)
     await websocket.accept(subprotocol="mcp")
 
-    read_stream: MemoryObjectReceiveStream[types.Union[JSONRPCMessage, Exception]]
-    read_stream_writer: MemoryObjectSendStream[types.Union[JSONRPCMessage, Exception]]
+    read_stream: MemoryObjectReceiveStream[Union[types.JSONRPCMessage, Exception]]
+    read_stream_writer: MemoryObjectSendStream[Union[types.JSONRPCMessage, Exception]]
 
     write_stream: MemoryObjectSendStream[types.JSONRPCMessage]
     write_stream_reader: MemoryObjectReceiveStream[types.JSONRPCMessage]

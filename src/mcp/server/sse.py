@@ -33,7 +33,7 @@ See SseServerTransport class documentation for more details.
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, Union, Dict
+from typing import Any, Union
 from urllib.parse import quote
 from uuid import UUID, uuid4
 
@@ -86,7 +86,9 @@ class SseServerTransport:
 
         logger.debug("Setting up SSE connection")
         read_stream: MemoryObjectReceiveStream[types.Union[JSONRPCMessage, Exception]]
-        read_stream_writer: MemoryObjectSendStream[types.Union[JSONRPCMessage, Exception]]
+        read_stream_writer: MemoryObjectSendStream[
+            types.Union[JSONRPCMessage, Exception]
+        ]
 
         write_stream: MemoryObjectSendStream[types.JSONRPCMessage]
         write_stream_reader: MemoryObjectReceiveStream[types.JSONRPCMessage]
@@ -100,7 +102,7 @@ class SseServerTransport:
         logger.debug(f"Created new session with ID: {session_id}")
 
         sse_stream_writer, sse_stream_reader = anyio.create_memory_object_stream[
-            Dict[str, Any]
+            dict[str, Any]
         ](0)
 
         async def sse_writer():

@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 import pytest
 from pydantic import BaseModel
@@ -165,7 +165,7 @@ class TestCallTools:
 
     @pytest.mark.anyio
     async def test_call_tool_with_list_int_input(self):
-        def sum_vals(vals: List[int]) -> int:
+        def sum_vals(vals: list[int]) -> int:
             return sum(vals)
 
         manager = ToolManager()
@@ -178,7 +178,7 @@ class TestCallTools:
 
     @pytest.mark.anyio
     async def test_call_tool_with_list_str_or_str_input(self):
-        def concat_strs(vals: Union[List[str], str]) -> str:
+        def concat_strs(vals: Union[list[str], str]) -> str:
             return vals if isinstance(vals, str) else "".join(vals)
 
         manager = ToolManager()
@@ -201,10 +201,10 @@ class TestCallTools:
             class Shrimp(BaseModel):
                 name: str
 
-            shrimp: List[Shrimp]
+            shrimp: list[Shrimp]
             x: None
 
-        def name_shrimp(tank: MyShrimpTank, ctx: Context) -> List[str]:
+        def name_shrimp(tank: MyShrimpTank, ctx: Context) -> list[str]:
             return [x.name for x in tank.shrimp]
 
         manager = ToolManager()
